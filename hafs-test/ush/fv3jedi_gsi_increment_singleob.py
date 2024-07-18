@@ -92,8 +92,7 @@ oberr_final = jncdiag.groups["EffectiveError1"].variables[f"{variable}"][:][0]
 #oberr_final = jncdiag.groups["EffectiveError2"].variables[f"{variable}"][:][0]
 #pdb.set_trace()
 ob = jncdiag.groups["ObsValue"].variables[f"{variable}"][:][0]
-#omf= jncdiag.groups["ombg"].variables[f"{variable}"][:][0]
-omf= jncdiag.groups["bkgmob"].variables[f"{variable}"][:][0]
+omf= jncdiag.groups["ombg"].variables[f"{variable}"][:][0]
 fmo= -1*omf
 hofx= fmo+ob
 
