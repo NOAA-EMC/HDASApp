@@ -84,6 +84,7 @@ done
 srun --label @YOUR_PATH_TO_GSI@/build/src/gsi/gsi.x
 
 ANAL_TIME=@TESTCASE_DATE@
+
 # Loop over first and last outer loops to generate innovation
 # diagnostic files for indicated observation types (groups)
 #

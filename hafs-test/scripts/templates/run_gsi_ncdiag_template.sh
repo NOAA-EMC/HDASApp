@@ -22,6 +22,7 @@ module list
 diag=$1
 if [[ $1 == "" ]]; then
   diag="diag_conv_t_ges.@TESTCASE_DATE@"
+
 fi
 
 # Make output directory
@@ -31,3 +32,4 @@ mkdir -p obsout
 # Tip: you might need to edit $HDASApp/build/lib/python3.10/pyiodaconv/gsi_ncdiag.py
 gsi_ncdiag="$HDASApp/build/install-bin/test_gsidiag.py"
 python $gsi_ncdiag --input $diag --output obsout --type conv --platform "@OBSTYPE@" --geovals obsout
+

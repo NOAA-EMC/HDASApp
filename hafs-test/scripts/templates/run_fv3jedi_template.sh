@@ -2,6 +2,7 @@
 #SBATCH --account=@SLURM_ACCOUNT@
 #SBATCH --qos=debug
 #SBATCH --ntasks=600
+
 #SBATCH -t 00:30:00
 #SBATCH --job-name=fv3jedi_test
 #SBATCH -o jedi.log
@@ -36,10 +37,12 @@ obsdir=./obsout
 if [[ ! -d "$obsdir" ]]; then
   echo "Missing obs file, link from GSI_TEST/obsout"
   ln -sf ../gsi_@DATE_TIME@/obsout .
+
 fi
 
 jedibin="@YOUR_PATH_TO_HDASAPP@/build/bin"
 # Run JEDI - currently cannot change processor count
 srun -l -n 600 $jedibin/fv3jedi_var.x ./$inputfile out.log
 rm out.log.0*
+
 exit

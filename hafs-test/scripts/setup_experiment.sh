@@ -3,14 +3,10 @@
 START=$(date +%s)
 
 # This script helps a user set up an experiment directory.
-
 ###### USER INPUT #####
-#YOUR_PATH_TO_HDASAPP="/path/to/your/installation/of/HDASApp"
-#YOUR_EXPERIMENT_DIR="/path/to/your/desired/experiment/directory/jedi-assim_test"
-#YOUR_PATH_TO_GSI="/path/to/your/installation/of/GSI"
-YOUR_PATH_TO_HDASAPP="/scratch1/NCEPDEV/hwrf/save/Jing.Cheng/JEDI/HDASApp_Jing"
-YOUR_EXPERIMENT_DIR="/scratch1/NCEPDEV/hwrf/scrub/Jing.Cheng/jediwork/hafstest"
-YOUR_PATH_TO_GSI="/scratch1/NCEPDEV/hwrf/save/Jing.Cheng/GSIversions/GSI.ufo_geovals_rdas"
+YOUR_PATH_TO_HDASAPP="/path/to/your/installation/of/HDASApp"
+YOUR_EXPERIMENT_DIR="/path/to/your/desired/experiment/directory/jedi-assim_test"
+YOUR_PATH_TO_GSI="/path/to/your/installation/of/GSI"
 
 SLURM_ACCOUNT="hurricane"
 DYCORE="FV3" #FV3 | MPAS   
@@ -21,6 +17,7 @@ OBSTYPE="sondes" # sondes | sfcship | sfc
 #######################
 DATA_STAGE="/scratch1/NCEPDEV/hwrf/save/Jing.Cheng/JEDI/staged-data"
 TESTCASE_DATE="2024063012"  # 2020082512; 2024063012
+
 source $YOUR_PATH_TO_HDASAPP/ush/detect_machine.sh
 
 # Print current setting to the screen.
@@ -68,6 +65,7 @@ case ${MACHINE_ID} in
    ;;
 esac
 
+
 # Lowercase dycore for script names.
 declare -l dycore="$DYCORE"
 
@@ -79,12 +77,11 @@ cd $YOUR_EXPERIMENT_DIR
 echo "Copying data. This will take just a moment."
 echo "  --> ${dycore}-jedi data on $MACHINE_ID"
 rsync -a ${DATA_STAGE}/hafs-data_fv3jedi_${TESTCASE_DATE} .
-
 # Copy the template run script which will be updated according to the user input
 cp -p $YOUR_PATH_TO_HDASAPP/hafs-test/scripts/templates/run_${dycore}jedi_template.sh ./${TEST_DATA}/run_${dycore}jedi.sh
 # Stream editor to edit files. Use "#" instead of "/" since we have "/" in paths.
-
 # Enter (cd) into the hafs test directory
+
 cd ${YOUR_EXPERIMENT_DIR}/${TEST_DATA}
 sed -i "s#@YOUR_PATH_TO_HDASAPP@#${YOUR_PATH_TO_HDASAPP}#g" ./run_${dycore}jedi.sh
 sed -i "s#@YOUR_EXPERIMENT_DIR@#${YOUR_EXPERIMENT_DIR}#g"   ./run_${dycore}jedi.sh
@@ -92,6 +89,7 @@ sed -i "s#@SLURM_ACCOUNT@#${SLURM_ACCOUNT}#g"               ./run_${dycore}jedi.
 sed -i "s#@MACHINE_ID@#${MACHINE_ID}#g"                     ./run_${dycore}jedi.sh
 sed -i "s#@DATE_TIME@#${TESTCASE_DATE}#g"                   ./run_${dycore}jedi.sh
 sed -i "s#@DEFAULT_YAML@#${OBSTYPE}_singleob_airTemperature_fv3jedi_${DA_METHOD}#g" ./run_${dycore}jedi.sh
+
 
 # Copy visualization package.
 cp -p $YOUR_PATH_TO_HDASAPP/hafs-test/ush/colormap.py .
@@ -106,6 +104,7 @@ mkdir -p Data/obs
 cp -rp $YOUR_PATH_TO_HDASAPP/hafs-test/validated_yamls/* testinput
 cp -p ${DATA_STAGE}/obs/* Data/obs/.
 
+
 # Copy GSI test data
 if [[ $GSI_TEST_DATA == "YES" ]]; then
   echo "  --> gsi data on $MACHINE_ID"
@@ -119,6 +118,7 @@ if [[ $GSI_TEST_DATA == "YES" ]]; then
     echo " HDAS Test Data stating on JET is ongoing"
   fi
   cd gsi_${TESTCASE_DATE}
+
   cp -p $YOUR_PATH_TO_HDASAPP/hafs-test/scripts/templates/run_gsi_template.sh run_gsi.sh
   sed -i "s#@YOUR_PATH_TO_GSI@#${YOUR_PATH_TO_GSI}#g" ./run_gsi.sh
   sed -i "s#@SLURM_ACCOUNT@#${SLURM_ACCOUNT}#g"       ./run_gsi.sh
@@ -156,6 +156,7 @@ if [[ $GSI_TEST_DATA == "YES" ]]; then
   sed -i "s#@L4DENSVAR@#${L4DENSVAR}#g" ./gsiparm.anl
   sed -i "s#@NHR_OBSBIN@#${NHR_OBSBIN}#g" ./gsiparm.anl
   sed -i "s#@ENS_NSTARTHR@#${ENS_NSTARTHR}#g" ./gsiparm.anl
+
 fi
 
 # Copy EVA scripts
