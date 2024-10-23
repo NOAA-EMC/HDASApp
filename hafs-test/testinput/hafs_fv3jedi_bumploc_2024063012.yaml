@@ -1,0 +1,86 @@
+geometry:
+ fms initialization:
+   namelist filename: DataFix/fmsmpp.nml
+   field table filename: DataFix/field_table
+ namelist filename: DataFix/input_hafs.nml
+ akbk: DataFix/akbk.nc
+ field metadata override: Data/fieldmetadata/gfs-restart.yaml
+ npz: 81
+ layout: [30,20]
+ io_layout: [1,1]
+ ntiles: 1 
+
+background:
+  read_from_file: 1
+  datetime: 2024-06-30T12:00:00Z
+  filetype: fms restart
+  datapath: Data/bkg
+  filename_core: '20240630.120000.fv_core.res.tile1.nc'
+  filename_trcr: '20240630.120000.fv_tracer.res.tile1.nc'
+  filename_sfcd: '20240630.120000.sfc_data.nc'
+  filename_sfcw: '20240630.120000.fv_srf_wnd.res.tile1.nc'
+  filename_cplr: '20240630.120000.coupler.res'
+  state variables: &3dvars [surface_pressure,air_temperature]
+
+background error:
+  covariance model: SABER
+  saber central block:
+    saber block name: BUMP_NICAS
+    calibration:
+      general:
+        universe length-scale: 250.0e3
+      io:
+        files prefix: Data/bump/fv3jedi_bumpparameters_nicas_lam_atm
+        alias:
+        - in code: air_temperature
+          in file: t_250km
+        - in code: surface_pressure
+          in file: ps_250km
+      drivers:
+        multivariate strategy: univariate 
+        #multivariate strategy: duplicated   # not work 
+        compute nicas: true
+        write local nicas: true
+      model:
+        level for 2d variables: last
+      nicas:
+        resolution: 8
+        explicit length-scales: true
+        max horizontal grid size: 120000
+        horizontal length-scale:
+        - groups: *3dvars
+          value: 250.0e3
+
+        vertical length-scale:
+        - groups:
+          - air_temperature
+          value: 0.03
+        - groups:
+          - surface_pressure
+          value: 0.0 
+
+      grids:
+      - model:
+          variables:
+          - air_temperature
+          - surface_pressure
+      output model files:
+      - parameter: cor_rh
+        file:
+          filetype: fms restart
+          datapath: Data/bump/
+          filename_core: bumpparameters_nicas_lam_atm.cor_rh.fv_core.res.nc
+          filename_trcr: bumpparameters_nicas_lam_atm.cor_rh.fv_tracer.res.nc
+          filename_sfcd: bumpparameters_nicas_lam_atm.cor_rh.sfc_data.nc
+          filename_sfcw: bumpparameters_nicas_lam_atm.cor_rh.fv_srf_wnd.res.nc
+          filename_cplr: bumpparameters_nicas_lam_atm.cor_rh.coupler.res
+      - parameter: cor_rv
+        file:
+          filetype: fms restart
+          datapath: Data/bump/
+          filename_core: bumpparameters_nicas_lam_atm.cor_rv.fv_core.res.nc
+          filename_trcr: bumpparameters_nicas_lam_atm.cor_rv.fv_tracer.res.nc
+          filename_sfcd: bumpparameters_nicas_lam_atm.cor_rv.sfc_data.nc
+          filename_sfcw: bumpparameters_nicas_lam_atm.cor_rv.fv_srf_wnd.res.nc
+          filename_cplr: bumpparameters_nicas_lam_atm.cor_rv.coupler.res
+

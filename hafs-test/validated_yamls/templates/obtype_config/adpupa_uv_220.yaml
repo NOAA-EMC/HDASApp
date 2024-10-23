@@ -1,0 +1,180 @@
+     - obs space:
+         name: sondes
+         obsdatain:
+           engine:
+             type: H5File
+             obsfile: @OBSFILE@
+         obsdataout:
+           engine:
+             type: H5File
+             obsfile: diag_ADPUPA_hofxs_uv_220..nc
+             allow overwrite: true
+         io pool:
+           max pool size: 1
+         observed variables: [windEastward, windNorthward]
+         simulated variables: [windEastward, windNorthward]
+       obs operator:
+         name: Composite
+         components: 
+         - name: VertInterp
+           hofx_scaling: true
+           hofx scaling field: wind_reduction_factor_at_10m 
+           hofx scaling field group: GeoVaLs
+           vertical coordinate: air_pressure
+           observation vertical coordinate: pressure
+           observation vertical coordinate group: MetaData
+           interpolation method: log-linear
+           variables:
+           - name: windEastward
+           - name: windNorthward
+
+       linear obs operator:
+         name: VertInterp
+
+       obs error:
+         covariance model: diagonal
+
+       obs filters:
+         # ----------------------------------
+         # windEastward
+         # ----------------------------------
+         # Initial error assignment
+         - filter: Perform Action
+           filter variables:
+           - name: windEastward
+           where:
+           - variable: ObsType/windEastward
+             is_in: 220 
+           action:
+             name: assign error
+             error function:
+               name: ObsFunction/ObsErrorModelStepwiseLinear
+               options:
+                 xvar:
+                   name: MetaData/pressure
+                 xvals: [110000, 105000, 100000, 95000, 90000, 85000, 80000, 75000, 70000, 65000, 60000, 55000, 50000, 45000, 40000, 35000, 30000, 25000, 20000, 15000, 10000, 7500, 5000, 4000, 3000, 2000, 1000, 500, 400, 300, 200, 100, 0]
+                 errors: [1.8521, 2.0636, 2.2799, 2.4211, 2.4934, 2.5155, 2.5027, 2.4785, 2.4533, 2.4381, 2.4381, 2.4579, 2.5012, 2.5738, 2.6365, 2.6858, 2.7667, 2.8971, 3.0477, 3.107, 3.0218, 2.8734, 2.7083, 2.552, 2.4364, 2.3654, 2.3111, 2.2438, 2.1753, 2.1299, 2.1085, 2.1007, 2.096]
+           defer to post: true 
+         ## adjusted error after initial assignment (acmod.f90)
+         #- filter: Perform Action
+         #  filter variables:
+         #  - name: airTemperature
+         #  where:
+         #  - variable: ObsType/airTemperature
+         #    is_in: 120
+         #  action:
+         #    name: inflate error
+         #    inflation variable:
+         #      name: ObsFunction/ObsErrorFactorConventional
+         #      options:
+         #        test QCflag: PreQC
+         #        test QCthreshold: 3
+         #        inflate variables: airTemperature
+         #        pressure: MetaData/pressure
+         #        distance threshold: -1.
+         #  defer to post: true
+
+         ##  error inflation based on pressure check (setupt.f90)
+         - filter: Perform Action
+           filter variables:
+           - name: windEastward
+           where:
+           - variable: ObsType/windEastward
+             is_in: 220
+           action:
+             name: inflate error
+             inflation variable:
+               name: ObsFunction/ObsErrorFactorPressureCheck
+               options:
+                 variable: windEastward
+                 inflation factor: 4.0
+         #        geovar_sfc_geomz: surface_geometric_height
+           defer to post: true
+         # ----------------------------
+         # windNorthward
+         # ----------------------------
+         - filter: Perform Action
+           filter variables:
+           - name: windNorthward
+           where:
+           - variable: ObsType/windNorthward
+             is_in: 220
+           action:
+             name: assign error
+             error function:
+               name: ObsFunction/ObsErrorModelStepwiseLinear
+               options:
+                 xvar:
+                   name: MetaData/pressure
+                 xvals: [110000, 105000, 100000, 95000, 90000, 85000, 80000, 75000, 70000, 65000, 60000, 55000, 50000, 45000, 40000, 35000, 30000, 25000, 20000, 15000, 10000, 7500, 5000, 4000, 3000, 2000, 1000, 500, 400, 300, 200, 100, 0]
+                 errors: [1.8521, 2.0636, 2.2799, 2.4211, 2.4934, 2.5155, 2.5027, 2.4785, 2.4533, 2.4381, 2.4381, 2.4579, 2.5012, 2.5738, 2.6365, 2.6858, 2.7667, 2.8971, 3.0477, 3.107, 3.0218, 2.8734, 2.7083, 2.552, 2.4364, 2.3654, 2.3111, 2.2438, 2.1753, 2.1299, 2.1085, 2.1007, 2.096]
+         # error inflation
+         - filter: Perform Action
+           filter variables:
+           - name: windNorthward
+           where:
+           - variable: ObsType/windNorthward
+             is_in: 220
+           action:
+             name: inflate error
+             inflation variable:
+               name: ObsFunction/ObsErrorFactorPressureCheck
+               options:
+                 variable: windNorthward
+                 inflation factor: 4.0       
+           defer to post: true
+
+         - filter: Bounds Check
+           apply at iterations: 0,1
+           filter variables:
+           - name: windEastward
+           - name: windNorthward
+           minvalue: -200.
+           maxvalue: 200.
+           where:
+           - variable: ObsType/windEastward
+             is_in: 220
+           - variable: ObsType/windNorthward
+             is_in: 220
+           action:
+             name: reject
+         - filter: Background Check
+           apply at iterations: 0,1
+           filter variables:
+           - name: windEastward
+           - name: windNorthward
+           #absolute threshold: 10.0
+           threshold: 10.0
+           where:
+           - variable: ObsType/windEastward
+             is_in: 220
+           - variable: ObsType/windNorthward
+             is_in: 220
+           action:
+             name: reject
+
+         - filter: Domain Check
+           apply at iterations: 0,1
+           where:
+             - variable:
+                 name: MetaData/timeOffset
+               minvalue: -1.50
+               maxvalue: 1.50
+           where:
+           - variable: ObsType/windEastward
+             is_in: 220
+           where:
+           - variable: ObsType/windNorthward
+             is_in: 220
+           action:
+             name: reject
+         - filter: Temporal Thinning
+           apply at iterations: 0,1
+           min_spacing: PT00M
+           seed_time: *AnaDate
+           category_variable:
+             name: MetaData/stationIdentification
+
+         - filter: GOMsaver
+           filename: ./Data/geovals/adpupa_geovals_hafs.nc4
+
