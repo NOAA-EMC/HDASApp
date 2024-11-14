@@ -102,6 +102,7 @@ fi
 mkdir -p testinput
 mkdir -p Data/obs
 cp -rp $YOUR_PATH_TO_HDASAPP/hafs-test/validated_yamls/* testinput
+cp -rp $YOUR_PATH_TO_HDASAPP/hafs-test/testinput/* testinput
 cp -p ${DATA_STAGE}/obs/* Data/obs/.
 
 

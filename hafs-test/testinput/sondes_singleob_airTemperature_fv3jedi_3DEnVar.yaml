@@ -26,14 +26,14 @@ cost function:
       namelist filename: DataFix/fmsmpp.nml
       field table filename: DataFix/field_table
     <<: *geometry_configs
-  analysis variables: &ana_vars [eastward_wind,northward_wind,air_temperature,air_pressure_thickness,specific_humidity,cloud_liquid_ice,cloud_liquid_water,ozone_mass_mixing_ratio]
+  analysis variables: &ana_vars [eastward_wind,northward_wind,air_temperature,air_pressure_thickness,water_vapor_mixing_ratio_wrt_moist_air,cloud_liquid_ice,cloud_liquid_water,ozone_mass_mixing_ratio]
 
   background:
     datetime: &AnaDate '2024-06-30T12:00:00Z'
     filetype: fms restart
     datapath: Data/bkg
     <<: *fv3file_names
-    state variables: &state_vars [eastward_wind,northward_wind,air_temperature,air_pressure_thickness,specific_humidity,cloud_liquid_ice,cloud_liquid_water,ozone_mass_mixing_ratio,phis,slmsk,sheleg,tsea,vtype,stype,vfrac,stc,smc,snwdph,u_srf,v_srf,f10m]
+    state variables: &state_vars [eastward_wind,northward_wind,air_temperature,air_pressure_thickness,water_vapor_mixing_ratio_wrt_moist_air,cloud_liquid_ice,cloud_liquid_water,ozone_mass_mixing_ratio,phis,slmsk,sheleg,vtype,stype,vfrac,stc,smc,snwdph,u_srf,v_srf,f10m]
   background error:
     covariance model: ensemble
     members from template:
