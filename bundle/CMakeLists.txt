@@ -35,6 +35,19 @@ set( ENABLE_MPI ON CACHE BOOL "Compile with MPI" )
 option(BUILD_HDASBUNDLE "Build HDAS Bundle" ON)
 option(CLONE_JCSDADATA "Clone JCSDA test data repositories" OFF)
 
+# Depend path for non-ecbuild packages
+set(DEPEND_LIB_ROOT ${CMAKE_CURRENT_BINARY_DIR}/Depends)
+list(APPEND CMAKE_PREFIX_PATH ${DEPEND_LIB_ROOT})
+
+# Library path for non-ecbuild packages
+link_directories(${CMAKE_CURRENT_BINARY_DIR}/lib)
+
+include( GNUInstallDirs )
+if(APPLE)
+  list( APPEND CMAKE_INSTALL_RPATH $ENV{llvm_openmp_ROOT}/lib )
+endif()
+list( APPEND CMAKE_INSTALL_RPATH ${CMAKE_CURRENT_BINARY_DIR}/fv3 )
+
 # Initialize bundle
 # -----------------
 ecbuild_bundle_initialize()
@@ -75,7 +88,7 @@ if(BUILD_HDASBUNDLE)
   ecbuild_bundle( PROJECT ufo SOURCE "../sorc/ufo" )
 
 # FMS and FV3 dynamical core
-  ecbuild_bundle( PROJECT fms SOURCE "../sorc/fms" )
+  include(fv3-interface.cmake)
   ecbuild_bundle( PROJECT fv3 SOURCE "../sorc/fv3" )
 
 # fv3-jedi and associated repositories

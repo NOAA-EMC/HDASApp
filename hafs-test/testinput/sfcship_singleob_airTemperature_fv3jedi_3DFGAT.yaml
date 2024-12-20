@@ -15,37 +15,52 @@ _geometry: &geometry_configs
   layout: [10,6]
   io_layout: [1,1]
   ntiles: 1
+  fms initialization:
+    namelist filename: DataFix/fmsmpp.nml
+    field table filename: DataFix/field_table
+  fieldsets:
+    fieldset: DataFix/dynamics_lam_cmaq.yaml
 
 cost function:
-  cost type: 3D-Var
+  cost type: 3D-FGAT
   time window:
-    begin: &InitialDate '2020-08-25T09:00:00Z'
-    length: PT6H
+      begin: &InitialDate '2020-08-25T09:00:00Z'
+      length: PT6H
   geometry:
-    fms initialization:
-      namelist filename: DataFix/fmsmpp.nml
-      field table filename: DataFix/field_table
     <<: *geometry_configs
   analysis variables: &ana_vars [eastward_wind,northward_wind,air_temperature,air_pressure_thickness,water_vapor_mixing_ratio_wrt_moist_air,cloud_liquid_ice,cloud_liquid_water,ozone_mass_mixing_ratio]
-
-
+  model:
+    name: PSEUDO
+    tstep: PT3H
+    filetype: fms restart
+    filename is datetime templated: true
+    datapath: Data/bkg
+    filename_core: '%yyyy%mm%dd.%hh%MM%ss.fv_core.res.tile1.nc'
+    filename_trcr: '%yyyy%mm%dd.%hh%MM%ss.fv_tracer.res.tile1.nc'
+    filename_sfcd: '%yyyy%mm%dd.%hh%MM%ss.sfc_data.nc'
+    filename_sfcw: '%yyyy%mm%dd.%hh%MM%ss.fv_srf_wnd.res.tile1.nc'
+    filename_cplr: '%yyyy%mm%dd.%hh%MM%ss.coupler.res'
   background:
-    datetime: &AnaDate '2020-08-25T12:00:00Z'
+    datetime: *InitialDate
     filetype: fms restart
     datapath: Data/bkg
-    <<: *fv3file_names
-    state variables: &state_vars [eastward_wind,northward_wind,air_temperature,air_pressure_thickness,water_vapor_mixing_ratio_wrt_moist_air,cloud_liquid_ice,cloud_liquid_water,ozone_mass_mixing_ratio,phis,slmsk,sheleg,vtype,stype,vfrac,stc,smc,snwdph,u_srf,v_srf,f10m]
+    filename_core: '20200825.090000.fv_core.res.tile1.nc'
+    filename_trcr: '20200825.090000.fv_tracer.res.tile1.nc'
+    filename_sfcd: '20200825.090000.sfc_data.nc'
+    filename_sfcw: '20200825.090000.fv_srf_wnd.res.tile1.nc'
+    filename_cplr: '20200825.090000.coupler.res'
+    state variables: &state_vars [eastward_wind,northward_wind,air_temperature,air_pressure_thickness,water_vapor_mixing_ratio_wrt_moist_air,cloud_liquid_ice,cloud_liquid_water,ozone_mass_mixing_ratio,phis,slmsk,sheleg,vtype,stype,vfrac,stc,smc,snwdph,u_srf,v_srf,f10m] 
   background error:
     covariance model: ensemble
     members from template:
       template:
-        datetime: *AnaDate
+        datetime: &AnaDate '2020-08-25T12:00:00Z'
         filetype: fms restart
-        state variables: *state_vars
+        state variables: *state_vars  
         datapath: ens/mem%mem%/
         <<: *fv3file_names
       pattern: '%mem%'
-      nmembers: 10
+      nmembers: 5 
       zero padding: 3
     localization:
       localization method: SABER
@@ -62,6 +77,7 @@ cost function:
           drivers:
              multivariate strategy: duplicated
              read local nicas: true
+
 #------------------------------------------------------------------------------
   observations:
      observers:
@@ -70,9 +86,7 @@ cost function:
          obsdatain:
            engine:
              type: H5File
-             #obsfile: Data/obs/sfcship_tsen_obs_2020082512.nc4
              obsfile: Data/obs/sfcshp.tm00.singleob.nc
-             #obsfile: Data/obs/gfs.t12z.SFCSHP.prepbufr.nr.nc
          obsdataout:
            engine:
              type: H5File
@@ -86,12 +100,15 @@ cost function:
        obs operator:
          name: Composite
          components:
-         - name: Identity 
+         - name: VertInterp
+           vertical coordinate: air_pressure
+           observation vertical coordinate: pressure
+           observation vertical coordinate group: MetaData
+           interpolation method: log-linear
            variables:
            - name: airTemperature
 
        obs post filters:
-         # Initial error assignment
          - filter: Perform Action
            filter variables:
            - name: airTemperature
@@ -100,7 +117,7 @@ cost function:
              is_in: 180
            action:
              name: assign error
-             error parameter: 0.9279
+             error parameter: 0.92823
            defer to post: true
       # Adjusted error after initial assignment (qcmod.f90)
          - filter: Perform Action
@@ -136,23 +153,32 @@ cost function:
                  inflation factor: 8.0
                  geovar_sfc_geomz: surface_geometric_height
            defer to post: true
+        #- filter: Bounds Check
+      #  filter variables:
+      #  - name: airTemperature
+      #  minvalue: 195.0
+      #  maxvalue: 327.0
+      #  action:
+      #    name: reject
+      #- filter: Background Check
+      #  filter variables:
+      #  - name: airTemperature
+      #  threshold: 7.0
+      #  absolute threshold: 9.0
+      #  action:
+      #    name: reject
+      #  defer to post: true
 
 variational:
   minimizer:
     algorithm: DRPCG    # Derber-Rosati Conjugate Gradients
   iterations:
-  - ninner: 1
+  - ninner: 50
     gradient norm reduction: 1e-60
-    test: on
     geometry:
-      fms initialization:
-        namelist filename: DataFix/fmsmpp.nml
-        field table filename: DataFix/field_table
-      fieldsets:
-        fieldset: DataFix/fix/dynamics_lam_cmaq.yaml
       <<: *geometry_configs
     diagnostics:
-      departures: ombg
+      departures: bkgmob
 final:
   diagnostics:
     departures: oman
@@ -160,6 +186,6 @@ final:
 output:
   filetype: fms restart
   datapath: Data/analysis/
-  prefix: envar-fv3_hafs_singleOBS_sfcshp 
+  prefix: envar-fv3_hafs_singleOBS_sfcshp #Ens3dvar-fv3_lam-C775
   frequency: PT3H
 
