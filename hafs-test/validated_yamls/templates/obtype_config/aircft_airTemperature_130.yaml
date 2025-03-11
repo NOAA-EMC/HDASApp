@@ -1,17 +1,13 @@
      - obs space:
-         name: sondes  
+         name: aircft_airTemperature_130 
          obsdatain:
            engine:
              type: H5File
              obsfile: @OBSFILE@
-           obsgrouping:
-             group variables: ["stationIdentification"]
-             sort variable: "pressure"
-             sort order: "descending"
          obsdataout:
            engine:
              type: H5File
-             obsfile: ADPUPA_IODA_hofx_t_120.nc
+             obsfile: AIRCFT_IODA_hofx_t_130.nc
              allow overwrite: true
          io pool:
            max pool size: 1
@@ -31,6 +27,10 @@
        obs error:
          covariance model: diagonal
 
+       obs localizations:
+         - localization method: Horizontal Gasperi-Cohn
+           lengthscale: 300e3
+
        obs filters:
          # Regional Domain Check
          - filter: Bounds Check
@@ -38,7 +38,6 @@
            - name: airTemperature
            test variables:
            - name: GeoVaLs/observable_domain_mask
-             flag all filter variables if any test variable is out of bounds: true
              minvalue: 0.0
              maxvalue: 0.5
          # Reject all obs with QualityMarker > 3
@@ -53,8 +52,11 @@
            where operator: or
            action:
              name: reject
-           action: 
              name: reduce obs space
+
+           #action:
+             #name: reduce obs space
+
          # Time window filter
          - filter: Domain Check
            apply at iterations: 0,1
@@ -63,13 +65,16 @@
                  name: MetaData/timeOffset # units: s
                minvalue: -10800
                maxvalue:  10800
+           #action:
+           #name: recude obs space
+
          # Initial errror assignment
          - filter: Perform Action
            filter variables:
            - name: airTemperature
            where:
            - variable: ObsType/airTemperature
-             is_in: 120
+             is_in: 130
            action:
              name: assign error
              error function:
@@ -78,44 +83,7 @@
                  xvar:
                    name: MetaData/pressure
                  xvals: [110000, 105000, 100000, 95000, 90000, 85000, 80000, 75000, 70000, 65000, 60000, 55000, 50000, 45000, 40000, 35000, 30000, 25000, 20000, 15000, 10000, 7500, 5000, 4000, 3000, 2000, 1000, 500, 400, 300, 200, 100, 0]
-                 errors: [1.2696, 1.3282, 1.3932, 1.439, 1.4354, 1.3669, 1.2552, 1.1362, 1.0397, 0.98016, 0.94757, 0.92875, 0.91714, 0.91625, 0.93506, 0.98447, 1.0699, 1.1816, 1.2862, 1.3542, 1.3831, 1.3832, 1.3534, 1.3109, 1.3018, 1.3414, 1.4017, 1.4471, 1.4744, 1.4892, 1.4964, 1.4988, 1.4962]
-         ## adjusted error after initial assignment (qcmod.f90)
-         - filter: Perform Action
-           filter variables:
-           - name: airTemperature
-           where:
-           - variable: ObsType/airTemperature
-             is_in: 120
-           action:
-             name: inflate error
-             inflation variable:
-               name: ObsFunction/ObsErrorFactorConventional
-               options:
-                 inflate variables: [airTemperature]
-                 pressure: MetaData/pressure
-
-         ## error inflation if observation QM is 3 or 7 (read_prepbufr.f90)
-         - filter: Perform Action
-           filter variables:
-           - name: airTemperature
-           where:
-            - variable: 
-                name: QualityMarker/airTemperature
-              is_in: 3        # qm=7 observation is aleady blocked
-           action:
-             name: inflate error
-             inflation factor: 1.2
-
-         ## error inflation if observation pressure < 100 hPa (read_prepbufr.f90)
-         - filter: Perform Action
-           filter variables:
-           - name: airTemperature
-             where:
-              - variable: MetaData/pressure
-                maxvalue: 10000.
-           action:
-             name: inflate error
-             inflation factor: 1.2
+                 errors: [2.4308, 2.3855, 2.3123, 2.2137, 2.0999, 1.9857, 1.8857, 1.8094, 1.7590, 1.7307, 1.7174, 1.7098, 1.6958, 1.6611, 1.5936, 1.4949, 1.3923, 1.3291, 1.3180, 1.3443, 1.4054, 1.4870, 1.5663, 1.6273, 1.6658, 1.6862, 1.6954, 1.6988, 1.6997, 1.6997, 1.6993, 1.6985, 1.6977]
 
          ##  error inflation based on pressure check (setupt.f90)
          - filter: Perform Action
@@ -123,7 +91,7 @@
            - name: airTemperature
            where:
            - variable: ObsType/airTemperature
-             is_in: 120
+             is_in: 130
            action:
              name: inflate error
              inflation variable:
@@ -139,6 +107,9 @@
            - name: airTemperature
            minvalue: 100
            maxvalue: 400
+           #action:
+           #  name: reduce obs space
+
          # Create temporary ObsErrorData
          - filter: Variable Assignment
            apply at iterations: 0,1
@@ -189,7 +160,7 @@
            apply at iterations: 0,1
            filter variables:
            - name: airTemperature
-           threshold: 8.0
+           threshold: 7.0
            action:
              name: reject
            where:
@@ -233,15 +204,3 @@
            category_variable:
              name: MetaData/stationIdentification
 
-         # # Error inflation due to duplication
-         # # since PreUseFlag is used in this function, for now , disabled it until further update
-         #- filter: Perform Action
-         #  filter variables:
-         #  - name: airTemperature
-         #  action:
-         #    name: inflate error
-         #    inflation variable:
-         #      name: ObsFunction/ObsErrorFactorDuplicateCheck
-         #      options:
-         #        use_air_pressure: true
-         #        variable: airTemperature

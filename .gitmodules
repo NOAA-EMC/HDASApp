@@ -45,3 +45,14 @@
 	path = sorc/crtm
 	url = https://github.com/jcsda/crtm.git
 	branch = release/crtm_jedi_v2.4.1
+[submodule "sorc/da-utils"]
+	path = sorc/da-utils
+	url = https://github.com/noaa-emc/da-utils.git
+	branch = develop
+[submodule "sorc/bufr-query"]
+	path = sorc/bufr-query
+	url = https://github.com/noaa-emc/bufr-query.git
+	branch = develop
+[submodule "develop"]
+	path = develop
+	url = https://github.com/noaa-emc/bufr-query.git

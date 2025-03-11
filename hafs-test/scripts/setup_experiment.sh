@@ -15,7 +15,6 @@ EVA="NO"
 DA_METHOD="3DEnVar" #3DEnVar | 4DEnVar | 3DFGAT
 OBSTYPE="sondes" # sondes | sfcship | sfc
 #######################
-DATA_STAGE="/scratch1/NCEPDEV/hwrf/save/Jing.Cheng/JEDI/staged-data"
 TESTCASE_DATE="2024063012"  # 2020082512; 2024063012
 
 source $YOUR_PATH_TO_HDASAPP/ush/detect_machine.sh
@@ -48,16 +47,16 @@ else
   exit 2
 fi
 
-if [[ ! ( $MACHINE_ID == "hera" || $MACHINE_ID == "orion" || $MACHINE_ID == "jet" ) ]]; then
-   echo "Not a valid MACHINE_ID: ${MACHINE_ID}. Please use hera | orion | jet."
+if [[ ! ( $MACHINE_ID == "hera" || $MACHINE_ID == "orion" || $MACHINE_ID == "hercules" ) ]]; then
+   echo "Not a valid MACHINE_ID: ${MACHINE_ID}. Please use hera | orion | hercules."
    exit 3
 fi
 case ${MACHINE_ID} in
    hera)
-      DATA_STAGE="/scratch1/NCEPDEV/hwrf/save/Jing.Cheng/JEDI/staged-data"
+      DATA_STAGE="/scratch3/NCEPDEV/hwrf/save/Jing.Cheng/JEDI/staged-data"
    ;;
    orion|hercules)
-      DATA_STAGE=""
+      DATA_STAGE="/work/noaa/hwrf/save/jcheng/JEDI/staged-data"
    ;;
    *)
       echo "platfomr not supported: ${MACHINE_ID}"
@@ -90,6 +89,17 @@ sed -i "s#@MACHINE_ID@#${MACHINE_ID}#g"                     ./run_${dycore}jedi.
 sed -i "s#@DATE_TIME@#${TESTCASE_DATE}#g"                   ./run_${dycore}jedi.sh
 sed -i "s#@DEFAULT_YAML@#${OBSTYPE}_singleob_airTemperature_fv3jedi_${DA_METHOD}#g" ./run_${dycore}jedi.sh
 
+# create run_obs.sh
+mkdir -p $YOUR_EXPERIMENT_DIR/obs
+cd $YOUR_EXPERIMENT_DIR/obs
+cp -p ${DATA_STAGE}/obs/gfs.prepbufr.2024063012 $YOUR_EXPERIMENT_DIR/obs/
+cp -p $YOUR_PATH_TO_HDASAPP/hafs-test/scripts/templates/run_obs_template.sh $YOUR_EXPERIMENT_DIR/obs/run_obs.sh
+
+sed -i "s#@YOUR_PATH_TO_HDASAPP@#${YOUR_PATH_TO_HDASAPP}#g" ./run_obs.sh
+sed -i "s#@SLURM_ACCOUNT@#${SLURM_ACCOUNT}#g"               ./run_obs.sh
+sed -i "s#@MACHINE_ID@#${MACHINE_ID}#g"                     ./run_obs.sh
+sed -i "s#@DATE_TIME@#${TESTCASE_DATE}#g"                   ./run_obs.sh
+
 
 # Copy visualization package.
 cp -p $YOUR_PATH_TO_HDASAPP/hafs-test/ush/colormap.py .
@@ -111,15 +121,15 @@ if [[ $GSI_TEST_DATA == "YES" ]]; then
   echo "  --> gsi data on $MACHINE_ID"
   # Enter into the gsi test directory
   cd $YOUR_EXPERIMENT_DIR
-  if [[ $MACHINE_ID == "hera" ]]; then
+  if [[ $MACHINE_ID == "hera" ]] || [[ $MACHINE_ID == "orion" ]] || [[ $MACHINE_ID == "hercules" ]]; then
     rsync -a ${DATA_STAGE}/gsi_${TESTCASE_DATE} .
-  elif [[ $MACHINE_ID == "orion" ]]; then
-    echo " HDAS Test Data staging on ORION is ongoing"
-  elif [[ $MACHINE_ID == "jet" ]]; then
-    echo " HDAS Test Data stating on JET is ongoing"
+   else
+    echo " HDAS Test Data stating on other machine (besides HERA/ORION/HERCULES)is ongoing"
   fi
+
   cd gsi_${TESTCASE_DATE}
 
+  # create run_gsi.sh
   cp -p $YOUR_PATH_TO_HDASAPP/hafs-test/scripts/templates/run_gsi_template.sh run_gsi.sh
   sed -i "s#@YOUR_PATH_TO_GSI@#${YOUR_PATH_TO_GSI}#g" ./run_gsi.sh
   sed -i "s#@SLURM_ACCOUNT@#${SLURM_ACCOUNT}#g"       ./run_gsi.sh
@@ -127,6 +137,7 @@ if [[ $GSI_TEST_DATA == "YES" ]]; then
   sed -i "s#@DA_METHOD@#${DA_METHOD}#g"               ./run_gsi.sh
   sed -i "s#@DATA_STAGE@#${DATA_STAGE}#g"             ./run_gsi.sh
   sed -i "s#@TESTCASE_DATE@#${TESTCASE_DATE}#g"       ./run_gsi.sh
+  # create run_gsi_ncdiag.sh
   cp -p $YOUR_PATH_TO_HDASAPP/hafs-test/scripts/templates/run_gsi_ncdiag_template.sh run_gsi_ncdiag.sh
   sed -i "s#@YOUR_PATH_TO_HDASAPP@#${YOUR_PATH_TO_HDASAPP}#g" ./run_gsi_ncdiag.sh
   sed -i "s#@MACHINE_ID@#${MACHINE_ID}#g"                     ./run_gsi_ncdiag.sh

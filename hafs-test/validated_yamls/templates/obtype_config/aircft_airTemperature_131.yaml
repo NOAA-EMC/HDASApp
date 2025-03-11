@@ -1,5 +1,5 @@
      - obs space:
-         name: sondes  
+         name: aircft_airTemperature_131 
          obsdatain:
            engine:
              type: H5File
@@ -8,28 +8,35 @@
              group variables: ["stationIdentification"]
              sort variable: "pressure"
              sort order: "descending"
+
          obsdataout:
            engine:
              type: H5File
-             obsfile: ADPUPA_IODA_hofx_t_120.nc
+             obsfile: AIRCFT_IODA_hofx_t_131.nc
              allow overwrite: true
          io pool:
            max pool size: 1
          observed variables: [airTemperature]
          simulated variables: [airTemperature]
+
        obs operator:
-         name: Composite
-         components: 
-         - name: VertInterp
-           vertical coordinate: air_pressure
-           observation vertical coordinate: pressure
-           observation vertical coordinate group: MetaData
-           interpolation method: log-linear
-           variables:
-           - name: airTemperature
+         name: VertInterp
+         vertical coordinate: air_pressure
+         observation vertical coordinate: pressure
+         observation vertical coordinate group: MetaData
+         interpolation method: log-linear
+         variables:
+         - name: airTemperature
+
+       linear obs operator:
+         name: VertInterp
 
        obs error:
          covariance model: diagonal
+
+       obs localizations:
+         - localization method: Horizontal Gasperi-Cohn
+           lengthscale: 300e3
 
        obs filters:
          # Regional Domain Check
@@ -38,7 +45,6 @@
            - name: airTemperature
            test variables:
            - name: GeoVaLs/observable_domain_mask
-             flag all filter variables if any test variable is out of bounds: true
              minvalue: 0.0
              maxvalue: 0.5
          # Reject all obs with QualityMarker > 3
@@ -53,8 +59,8 @@
            where operator: or
            action:
              name: reject
-           action: 
              name: reduce obs space
+
          # Time window filter
          - filter: Domain Check
            apply at iterations: 0,1
@@ -63,13 +69,16 @@
                  name: MetaData/timeOffset # units: s
                minvalue: -10800
                maxvalue:  10800
+           #action:
+           #name: recude obs space
+
          # Initial errror assignment
          - filter: Perform Action
            filter variables:
            - name: airTemperature
            where:
            - variable: ObsType/airTemperature
-             is_in: 120
+             is_in: 131
            action:
              name: assign error
              error function:
@@ -78,44 +87,7 @@
                  xvar:
                    name: MetaData/pressure
                  xvals: [110000, 105000, 100000, 95000, 90000, 85000, 80000, 75000, 70000, 65000, 60000, 55000, 50000, 45000, 40000, 35000, 30000, 25000, 20000, 15000, 10000, 7500, 5000, 4000, 3000, 2000, 1000, 500, 400, 300, 200, 100, 0]
-                 errors: [1.2696, 1.3282, 1.3932, 1.439, 1.4354, 1.3669, 1.2552, 1.1362, 1.0397, 0.98016, 0.94757, 0.92875, 0.91714, 0.91625, 0.93506, 0.98447, 1.0699, 1.1816, 1.2862, 1.3542, 1.3831, 1.3832, 1.3534, 1.3109, 1.3018, 1.3414, 1.4017, 1.4471, 1.4744, 1.4892, 1.4964, 1.4988, 1.4962]
-         ## adjusted error after initial assignment (qcmod.f90)
-         - filter: Perform Action
-           filter variables:
-           - name: airTemperature
-           where:
-           - variable: ObsType/airTemperature
-             is_in: 120
-           action:
-             name: inflate error
-             inflation variable:
-               name: ObsFunction/ObsErrorFactorConventional
-               options:
-                 inflate variables: [airTemperature]
-                 pressure: MetaData/pressure
-
-         ## error inflation if observation QM is 3 or 7 (read_prepbufr.f90)
-         - filter: Perform Action
-           filter variables:
-           - name: airTemperature
-           where:
-            - variable: 
-                name: QualityMarker/airTemperature
-              is_in: 3        # qm=7 observation is aleady blocked
-           action:
-             name: inflate error
-             inflation factor: 1.2
-
-         ## error inflation if observation pressure < 100 hPa (read_prepbufr.f90)
-         - filter: Perform Action
-           filter variables:
-           - name: airTemperature
-             where:
-              - variable: MetaData/pressure
-                maxvalue: 10000.
-           action:
-             name: inflate error
-             inflation factor: 1.2
+                 errors: [1.2923, 1.2290, 1.1192, 0.95366, 0.79785, 0.70222, 0.66381, 0.65067, 0.64137, 0.62868, 0.61072, 0.59006, 0.57525, 0.57499, 0.60083, 0.66919, 0.77804, 0.89439, 0.97993, 1.0119, 1.0156, 1.0113, 1.0067, 1.0035, 1.0016, 1.0006, 1.0001, 0.99999, 0.99994, 0.99985, 0.99958, 0.99914, 0.99869]
 
          ##  error inflation based on pressure check (setupt.f90)
          - filter: Perform Action
@@ -123,7 +95,7 @@
            - name: airTemperature
            where:
            - variable: ObsType/airTemperature
-             is_in: 120
+             is_in: 131
            action:
              name: inflate error
              inflation variable:
@@ -132,13 +104,45 @@
                  variable: airTemperature
                  inflation factor: 8.0
 
-         # Bounds Check
+         # Error inflation when QualityMarker == 3 (read_prepbufr.f90)
+         - filter: Perform Action
+           filter variables:
+           - name: airTemperature
+           action:
+             name: inflate error
+             inflation factor: 1.2
+           where:
+           - variable: QualityMarker/airTemperature
+             is_in: 3
+         # Error inflation when observation presser < 100 hPa (read_prepbufr.f90)
+         - filter: Perform Action
+           filter variables:
+           - name: airTemperature
+           action:
+             name: inflate error
+             inflation factor: 1.2
+           where:
+           - variable: MetaData/pressure
+             maxvalue: 10000.0
+
+         # Bounds Check (ObsError)
+         - filter: Bounds Check
+           filter variables:
+           - name: airTemperature
+           test variables:
+           - name: ObsErrorData/airTemperature
+           minvalue: 0.0
+           
+         # Bounds Check (ObsValue)
          - filter: Bounds Check
            apply at iterations: 0,1
            filter variables:
            - name: airTemperature
            minvalue: 100
            maxvalue: 400
+           #action:
+           #  name: reduce obs space
+
          # Create temporary ObsErrorData
          - filter: Variable Assignment
            apply at iterations: 0,1
@@ -189,7 +193,7 @@
            apply at iterations: 0,1
            filter variables:
            - name: airTemperature
-           threshold: 8.0
+           threshold: 7.0
            action:
              name: reject
            where:
@@ -202,7 +206,7 @@
            apply at iterations: 0,1
            filter variables:
            - name: airTemperature
-           threshold: 5.6 
+           threshold: 4.9 
            action:
              name: reject
            where:
@@ -225,23 +229,4 @@
              value: is_valid
            defer to post: true
 
-         # Duplicate Check
-         - filter: Temporal Thinning
-           apply at iterations: 0,1
-           min_spacing: PT00M
-           seed_time: *AnaDate
-           category_variable:
-             name: MetaData/stationIdentification
 
-         # # Error inflation due to duplication
-         # # since PreUseFlag is used in this function, for now , disabled it until further update
-         #- filter: Perform Action
-         #  filter variables:
-         #  - name: airTemperature
-         #  action:
-         #    name: inflate error
-         #    inflation variable:
-         #      name: ObsFunction/ObsErrorFactorDuplicateCheck
-         #      options:
-         #        use_air_pressure: true
-         #        variable: airTemperature
