@@ -94,13 +94,15 @@ mkdir -p $YOUR_EXPERIMENT_DIR/obs
 cd $YOUR_EXPERIMENT_DIR/obs
 cp -p ${DATA_STAGE}/obs/gfs.prepbufr.2024063012 $YOUR_EXPERIMENT_DIR/obs/
 cp -p $YOUR_PATH_TO_HDASAPP/hafs-test/scripts/templates/run_obs_template.sh $YOUR_EXPERIMENT_DIR/obs/run_obs.sh
+cp -p -p $YOUR_PATH_TO_HDASAPP/hafs-test/IODA/yaml/prepbufr_adpupa.yaml $YOUR_EXPERIMENT_DIR/obs
 
 sed -i "s#@YOUR_PATH_TO_HDASAPP@#${YOUR_PATH_TO_HDASAPP}#g" ./run_obs.sh
 sed -i "s#@SLURM_ACCOUNT@#${SLURM_ACCOUNT}#g"               ./run_obs.sh
 sed -i "s#@MACHINE_ID@#${MACHINE_ID}#g"                     ./run_obs.sh
 sed -i "s#@DATE_TIME@#${TESTCASE_DATE}#g"                   ./run_obs.sh
 
-
+# back to jedi run directory
+cd ${YOUR_EXPERIMENT_DIR}/${TEST_DATA}
 # Copy visualization package.
 cp -p $YOUR_PATH_TO_HDASAPP/hafs-test/ush/colormap.py .
 if [[ $GSI_TEST_DATA == "YES" && $DYCORE == "FV3" ]]; then
@@ -148,7 +150,7 @@ if [[ $GSI_TEST_DATA == "YES" ]]; then
   #cp gsiparm.anl.tmp gsiparm.anl
   # linke observation prepbufr data
   if [ ${OBSTYPE} == "sondes" ]; then
-     ln -sf ${DATA_STAGE}/obs/sonde_singleob_airTemperature_prepbufr prepbufr
+     ln -sf ${DATA_STAGE}/obs/gfs.prepbufr.2024063012.ADPUPA prepbufr
   elif [ ${OBSTYPE} == "sfcship" ]; then
      ln -sf ${DATA_STAGE}/obs/sfcshp_singleob_airTemperature_prepbufr prepbufr
   elif [ ${OBSTYPE} == "sfc" ]; then
