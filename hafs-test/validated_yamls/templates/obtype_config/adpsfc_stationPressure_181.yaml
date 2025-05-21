@@ -2,11 +2,11 @@
   observations:
      observers:
      - obs space:
-         name: surface_ps_187
+         name: surface_ps_181
          obsdatain:
            engine:
              type: H5File
-             obsfile: @OBSFILE@ 
+             obsfile:  obs/hafs.#HH#.adpsfc.nc
            obsgrouping:
              group variables: ["stationIdentification"]
              sort variable: "pressure"
@@ -14,7 +14,7 @@
          obsdataout:
            engine:
              type: H5File
-             obsfile: ADPSFC_IODA_hofx_ps.nc
+             obsfile: hofx/diag_adpsfc__stationPressure_181_#HH#.nc
              allow overwrite: true
          io pool:
            max pool size: 1
@@ -44,8 +44,8 @@
          where:
          - variable:
              name: MetaData/latitude
-           minvalue: 0.
-           maxvalue: 28.
+           minvalue: #MIN_LAT#
+           maxvalue: #MAX_LAT#
          action:
            name: reduce obs space
        - filter : Domain Check
@@ -53,8 +53,8 @@
          where:
          - variable:
              name: MetaData/longitude
-           minvalue: -76.
-           maxvalue: -40.
+           minvalue: #MIN_LON#
+           maxvalue: #MAX_LON#
          action:
            name: reduce obs space
 
@@ -70,7 +70,7 @@
          - name: stationPressure
          where:
          - variable: ObsType/stationPressure
-           is_in: 187
+           is_in: 181
          action:
            name: assign error
            error function:

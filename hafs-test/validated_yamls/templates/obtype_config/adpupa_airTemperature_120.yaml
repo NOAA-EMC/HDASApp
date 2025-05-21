@@ -1,9 +1,9 @@
      - obs space:
-         name: sondes  
+         name: adpupa_airTemperature_120 
          obsdatain:
            engine:
              type: H5File
-             obsfile: @OBSFILE@
+             obsfile: obs/hafs.#HH#.adpupa.nc
            obsgrouping:
              group variables: ["stationIdentification"]
              sort variable: "pressure"
@@ -11,7 +11,7 @@
          obsdataout:
            engine:
              type: H5File
-             obsfile: ADPUPA_IODA_hofx_t_120_qc.nc
+             obsfile: hofx/diag_adpupa_airtemperature_120_#HH#.nc
              allow overwrite: true
          io pool:
            max pool size: 1
@@ -42,8 +42,8 @@
          where:
          - variable:
              name: MetaData/latitude
-           minvalue: 0.
-           maxvalue: 28.
+           minvalue: #MIN_LAT#
+           maxvalue: #MAX_LAT#
          action:
            name: reduce obs space
        - filter : Domain Check
@@ -51,8 +51,8 @@
          where:
          - variable:
              name: MetaData/longitude
-           minvalue: -76.
-           maxvalue: -40.
+           minvalue: #MIN_LON#
+           maxvalue: #MAX_LON#
          action:
            name: reduce obs space
        # Reject all obs with QualityMarker > 3
