@@ -1,6 +1,3 @@
-#------------------------------------------------------------------------------
-  observations:
-     observers:
      - obs space:
          name: surface_ps_181
          obsdatain:
