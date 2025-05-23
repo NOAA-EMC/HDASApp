@@ -11,7 +11,7 @@
          obsdataout:
            engine:
              type: H5File
-             obsfile: hofx/diag_adpsfc__stationPressure_181_#HH#.nc
+             obsfile: hofx/diag_adpsfc_stationPressure_181_#HH#.nc
              allow overwrite: true
          io pool:
            max pool size: 1
