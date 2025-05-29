@@ -14,10 +14,11 @@ iodaconv
 
 my_dir="$( cd "$( dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd )"
 
-gdasdir=${1:-${my_dir}/../../}
+hdasdir=${1:-${my_dir}/../../}
 
 for r in $repos; do
-  echo "Updating ${gdasdir}/sorc/${r}"
-  cd ${gdasdir}/sorc
+  echo "Updating ${hdasdir}/sorc/${r}"
+  cd ${hdasdir}/sorc
   git submodule update --remote --merge ${r}
 done
+cd ${hdasdir}

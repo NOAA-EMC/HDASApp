@@ -78,6 +78,9 @@ if(BUILD_HDASBUNDLE)
   #ecbuild_bundle( PROJECT crtm GIT "https://github.com/JCSDA/crtm.git"   TAG v2.4.1-jedi.1 )
   ecbuild_bundle( PROJECT crtm SOURCE "../sorc/crtm" )
 
+# EMC BUFR-query library
+  ecbuild_bundle( PROJECT bufr-query SOURCE "../sorc/bufr-query" )
+
 # Core JEDI repositories
   ecbuild_bundle( PROJECT oops SOURCE "../sorc/oops" )
   ecbuild_bundle( PROJECT vader SOURCE "../sorc/vader" )
@@ -96,6 +99,9 @@ if(BUILD_HDASBUNDLE)
   ecbuild_bundle( PROJECT fv3-jedi-lm SOURCE "../sorc/fv3-jedi-lm" )
   option(ENABLE_FV3_JEDI_DATA "Obtain fv3-jedi test data from fv3-jedi-data repository (vs tarball)" ON)
   ecbuild_bundle( PROJECT fv3-jedi SOURCE "../sorc/fv3-jedi" )
+
+  # Build JEDI/DA or other peripherals
+  ecbuild_bundle( PROJECT da-utils SOURCE "../sorc/da-utils" )
 
 # Build IODA converters
   option(BUILD_IODA_CONVERTERS "Build IODA Converters" ON)

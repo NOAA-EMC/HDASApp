@@ -7,6 +7,7 @@
 
 set -eu
 
+echo "Start ... `date`"
 dir_root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 source $dir_root/ush/detect_machine.sh
@@ -35,7 +36,8 @@ usage() {
 INSTALL_PREFIX=""
 CMAKE_OPTS=""
 BUILD_TARGET="${MACHINE_ID:-'localhost'}"
-BUILD_VERBOSE="NO"
+BUILD_JOBS="${BUILD_JOBS:-8}"
+BUILD_VERBOSE="${BUILD_VERBOSE:-"NO"}"
 CLONE_JCSDADATA="NO"
 CLEAN_BUILD="NO"
 BUILD_JCSDA="NO"
@@ -71,12 +73,12 @@ while getopts "p:t:c:hvdfa" opt; do
 done
 
 case ${BUILD_TARGET} in
-  hera | orion | hercules)
+  hera | orion | hercules | wcoss2 | noaacloud | gaeac5 | gaeac6 | ursa )
     echo "Building HDASApp on $BUILD_TARGET"
     source $dir_root/ush/module-setup.sh
     module use $dir_root/modulefiles
     module load HDAS/$BUILD_TARGET.$COMPILER
-    CMAKE_OPTS+=" -DMPIEXEC_EXECUTABLE=$MPIEXEC_EXEC -DMPIEXEC_NUMPROC_FLAG=$MPIEXEC_NPROC"
+    CMAKE_OPTS+=" -DMPIEXEC_EXECUTABLE=$MPIEXEC_EXEC -DMPIEXEC_NUMPROC_FLAG=$MPIEXEC_NPROC -DBUILD_GSIBEC=ON"
     module list
     ;;
   $(hostname))
@@ -87,7 +89,11 @@ case ${BUILD_TARGET} in
     ;;
 esac
 
-CMAKE_OPTS+=" -DCLONE_JCSDADATA=$CLONE_JCSDADATA"
+CMAKE_OPTS+=" -DCLONE_JCSDADATA=$CLONE_JCSDADATA -DMACHINE=$BUILD_TARGET"
+# TODO: Remove LD_LIBRARY_PATH line as soon as permanent solution is available
+if [[ $BUILD_TARGET == 'wcoss2' ]]; then
+    export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/cray/pe/mpich/8.1.19/ofi/intel/19.0/lib"
+fi
 
 BUILD_DIR=${BUILD_DIR:-$dir_root/build}
 if [[ $CLEAN_BUILD == 'YES' ]]; then
@@ -98,18 +104,20 @@ mkdir -p ${BUILD_DIR} && cd ${BUILD_DIR}
 # If INSTALL_PREFIX is not empty; install at INSTALL_PREFIX
 [[ -n "${INSTALL_PREFIX:-}" ]] && CMAKE_OPTS+=" -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX}"
 
+# activate tests based on if this is cloned within the global-workflow
+WORKFLOW_BUILD=${WORKFLOW_BUILD:-"OFF"}
+CMAKE_OPTS+=" -DWORKFLOW_TESTS=${WORKFLOW_BUILD}"
+
 # JCSDA changed test data things, need to make a dummy CRTM directory
-if [[ $BUILD_TARGET == 'hera' ]]; then
-  if [ -d "$dir_root/bundle/fix/test-data-release/" ]; then rm -rf $dir_root/bundle/fix/test-data-release/; fi
-  if [ -d "$dir_root/bundle/test-data-release/" ]; then rm -rf $dir_root/bundle/test-data-release/; fi
-  mkdir -p $dir_root/bundle/fix/test-data-release/
-  mkdir -p $dir_root/bundle/test-data-release/
-  ln -sf $HDASAPP_TESTDATA/crtm $dir_root/bundle/fix/test-data-release/crtm
-  ln -sf $HDASAPP_TESTDATA/crtm $dir_root/bundle/test-data-release/crtm
-fi
+if [ -d "$dir_root/bundle/fix/test-data-release/" ]; then rm -rf $dir_root/bundle/fix/test-data-release/; fi
+if [ -d "$dir_root/bundle/test-data-release/" ]; then rm -rf $dir_root/bundle/test-data-release/; fi
+mkdir -p $dir_root/bundle/fix/test-data-release/
+mkdir -p $dir_root/bundle/test-data-release/
+ln -sf $GDASAPP_TESTDATA/crtm $dir_root/bundle/fix/test-data-release/crtm
+ln -sf $GDASAPP_TESTDATA/crtm $dir_root/bundle/test-data-release/crtm
 
 # Configure
-echo "Configuring ..."
+echo "Configuring ... `date`"
 set -x
 cmake \
   ${CMAKE_OPTS:-} \
@@ -117,15 +125,18 @@ cmake \
 set +x
 
 # Build
-echo "Building ..."
+echo "Building ... `date`"
 set -x
 if [[ $BUILD_JCSDA == 'YES' ]]; then
-  make -j ${BUILD_JOBS:-6} VERBOSE=$BUILD_VERBOSE
+  make -j ${BUILD_JOBS:-8} VERBOSE=$BUILD_VERBOSE
 else
-  builddirs="fv3-jedi iodaconv"
+  builddirs="fv3-jedi iodaconv bufr-query da-utils"
   for b in $builddirs; do
     cd $b
-    make -j ${BUILD_JOBS:-6} VERBOSE=$BUILD_VERBOSE
+    set +x      
+    echo "Building $b ... `date`"
+    set -x
+    make -j ${BUILD_JOBS} VERBOSE=$BUILD_VERBOSE
     cd ../
   done
 fi
@@ -133,10 +144,10 @@ set +x
 
 # Install
 if [[ -n ${INSTALL_PREFIX:-} ]]; then
-  echo "Installing ..."
+  echo "Installing ... `date`"
   set -x
-  make install
+  make install -j ${BUILD_JOBS:-8}
   set +x
 fi
-
+echo "Finish ... `date`"
 exit 0
