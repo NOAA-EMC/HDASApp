@@ -33,20 +33,19 @@ usage() {
 # ==============================================================================
 
 # Defaults:
-INSTALL_PREFIX=""
+INSTALL_PREFIX="${dir_root}/install"
+CMAKE_INSTALL_LIBDIR="lib"
 CMAKE_OPTS=""
 BUILD_TARGET="${MACHINE_ID:-'localhost'}"
-BUILD_JOBS="${BUILD_JOBS:-8}"
-BUILD_VERBOSE="${BUILD_VERBOSE:-"NO"}"
+BUILD_VERBOSE="NO"
 CLONE_JCSDADATA="NO"
 CLEAN_BUILD="NO"
-BUILD_JCSDA="NO"
 COMPILER="${COMPILER:-intel}"
 
-while getopts "p:t:c:hvdfa" opt; do
+while getopts "w:t:c:hvdfa" opt; do
   case $opt in
-    p)
-      INSTALL_PREFIX=$OPTARG
+    w)
+      HOMEgfs=$OPTARG
       ;;
     t)
       BUILD_TARGET=$OPTARG
@@ -62,9 +61,6 @@ while getopts "p:t:c:hvdfa" opt; do
       ;;
     f)
       CLEAN_BUILD=YES
-      ;;
-    a)
-      BUILD_JCSDA=YES
       ;;
     h|\?|:)
       usage
@@ -90,6 +86,7 @@ case ${BUILD_TARGET} in
 esac
 
 CMAKE_OPTS+=" -DCLONE_JCSDADATA=$CLONE_JCSDADATA -DMACHINE=$BUILD_TARGET"
+
 # TODO: Remove LD_LIBRARY_PATH line as soon as permanent solution is available
 if [[ $BUILD_TARGET == 'wcoss2' ]]; then
     export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/cray/pe/mpich/8.1.19/ofi/intel/19.0/lib"
@@ -101,12 +98,15 @@ if [[ $CLEAN_BUILD == 'YES' ]]; then
 fi
 mkdir -p ${BUILD_DIR} && cd ${BUILD_DIR}
 
-# If INSTALL_PREFIX is not empty; install at INSTALL_PREFIX
-[[ -n "${INSTALL_PREFIX:-}" ]] && CMAKE_OPTS+=" -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX}"
-
-# activate tests based on if this is cloned within the global-workflow
+# Set WORKFLOW_TESTS as CMake option
 WORKFLOW_BUILD=${WORKFLOW_BUILD:-"OFF"}
-CMAKE_OPTS+=" -DWORKFLOW_TESTS=${WORKFLOW_BUILD}"
+CMAKE_OPTS+=" -DWORKFLOW_TESTS=${WORKFLOW_TESTS:-${WORKFLOW_BUILD}}"
+
+# Set INSTALL_PREFIX as CMake option
+CMAKE_OPTS+=" -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX}"
+
+# Set CMAKE_INSTALL_LIBDIR as CMake option
+CMAKE_OPTS+=" -DCMAKE_INSTALL_LIBDIR=${CMAKE_INSTALL_LIBDIR}"
 
 # JCSDA changed test data things, need to make a dummy CRTM directory
 if [ -d "$dir_root/bundle/fix/test-data-release/" ]; then rm -rf $dir_root/bundle/fix/test-data-release/; fi
@@ -124,30 +124,11 @@ cmake \
   $dir_root/bundle
 set +x
 
-# Build
-echo "Building ... `date`"
+# Install
+echo "Installing ... `date`"
 set -x
-if [[ $BUILD_JCSDA == 'YES' ]]; then
-  make -j ${BUILD_JOBS:-8} VERBOSE=$BUILD_VERBOSE
-else
-  builddirs="fv3-jedi iodaconv bufr-query da-utils"
-  for b in $builddirs; do
-    cd $b
-    set +x      
-    echo "Building $b ... `date`"
-    set -x
-    make -j ${BUILD_JOBS} VERBOSE=$BUILD_VERBOSE
-    cd ../
-  done
-fi
+make install -j ${BUILD_JOBS:-8}
 set +x
 
-# Install
-if [[ -n ${INSTALL_PREFIX:-} ]]; then
-  echo "Installing ... `date`"
-  set -x
-  make install -j ${BUILD_JOBS:-8}
-  set +x
-fi
 echo "Finish ... `date`"
 exit 0
