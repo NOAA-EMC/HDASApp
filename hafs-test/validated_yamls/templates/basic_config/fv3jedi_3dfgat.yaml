@@ -1,9 +1,9 @@
-_filenames: &fv3file_names
-  filename_core: '_FV3_CORE_FILE_'
-  filename_trcr: '_FV3_TRCR_FILE_'
-  filename_sfcd: '_FV3_SFCD_FILE_'
-  filename_sfcw: '_FV3_SFCW_FILE_'
-  filename_cplr: '_FV3_CPLR_FILE_'
+_filenames3: &fv3file_names3
+  filename_core: '_FV3_CORE_FILE3_'
+  filename_trcr: '_FV3_TRCR_FILE3_'
+  filename_sfcd: '_FV3_SFCD_FILE3_'
+  filename_sfcw: '_FV3_SFCW_FILE3_'
+  filename_cplr: '_FV3_CPLR_FILE3_'
 
 _geometry: &geometry_configs
   namelist filename: _INPUT_HAFS_NML_
@@ -33,7 +33,7 @@ _ens_geometry: &ens_geometry_configs
   vert coordinate: logp
 
 cost function:
-  cost type: 3D-Var
+  cost type: 3D-FGAT
   time window:
     begin: _INITIALDATE_
     length: PT6H
@@ -52,12 +52,24 @@ cost function:
   - cloud_liquid_ice
   - cloud_liquid_water
   - ozone_mass_mixing_ratio
-  background:
-    datetime: _ANALYSISDATE_
+  model:
+    name: PSEUDO
+    tstep: PT3H
     filetype: fms restart
     filename is datetime templated: true
     datapath: bkg/
-    <<: *fv3file_names
+    filename_core: '%yyyy%mm%dd.%hh%MM%ss.fv_core.res_NEST_TILE_STR_.nc'
+    filename_trcr: '%yyyy%mm%dd.%hh%MM%ss.fv_tracer.res_NEST_TILE_STR_.nc'
+    filename_sfcd: '%yyyy%mm%dd.%hh%MM%ss.sfc_data_NEST_TILE_STR_.nc'
+    filename_sfcw: '%yyyy%mm%dd.%hh%MM%ss.fv_srf_wnd.res_NEST_TILE_STR_.nc'
+    filename_cplr: '%yyyy%mm%dd.%hh%MM%ss.coupler_NEST_TILE_STR_.res'
+  background:
+    read_from_file: 1
+    datetime: _INITIALDATE_
+    filetype: fms restart
+    filename is datetime templated: true
+    datapath: bkg/
+    <<: *fv3file_names3
     state variables: &vars_state
     - eastward_wind
     - northward_wind

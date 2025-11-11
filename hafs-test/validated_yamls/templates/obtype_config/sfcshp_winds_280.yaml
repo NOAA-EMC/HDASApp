@@ -1,9 +1,9 @@
     - obs space:
-        name: adpsfc_winds_281
+        name: sfcshp_winds_280
         obsdatain:
           engine:
             type: H5File
-            obsfile: obs/hafs.#HH#.adpsfc.nc
+            obsfile: obs/hafs.#HH#.sfcshp.nc
             missing file action: "warn"
           obsgrouping:
             group variables: ["stationIdentification"]
@@ -12,7 +12,7 @@
         obsdataout:
           engine:
             type: H5File
-            obsfile: hofx/diag_adpsfc_winds_281_#HH#.nc
+            obsfile: hofx/diag_sfcshp_winds_280_#HH#.nc
             allow overwrite: true
         io pool:
           max pool size: #TOTAL_TASKS#
@@ -65,7 +65,7 @@
         - name: windNorthward
         where:
         - variable: ObsType/windEastward
-          is_not_in: 281
+          is_not_in: 280
         - variable: QualityMarker/windEastward
           is_in: 4-15
           value: is_not_valid
@@ -78,23 +78,6 @@
       # Observation Prior Filters (QC)
       # initial error assignment
       obs prior filters:
-      - filter: Perform Action
-        filter variables:
-        - name: windEastward
-        - name: windNorthward
-        where:
-        - variable: ObsType/windEastward
-          is_in: 281
-        action:
-          name: assign error
-          error function:
-            name: ObsFunction/ObsErrorModelStepwiseLinear
-            options:
-              xvar:
-                name: MetaData/pressure
-              xvals: [110000, 105000, 100000, 95000, 90000, 85000, 80000, 75000, 70000, 65000, 60000, 55000, 50000, 45000, 40000, 35000, 30000, 25000, 20000, 15000, 10000, 7500, 5000, 4000, 3000, 2000, 1000, 500, 400, 300, 200, 100, 0]
-              errors: [1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854, 1.8854]
-
       # Online domain check
       - filter: Bounds Check
         filter variables:
@@ -104,6 +87,18 @@
         - name:  GeoVaLs/observable_domain_mask
           minvalue: 0.0
           maxvalue: 0.5
+
+      - filter: Perform Action
+        filter variables:
+        - name: windEastward
+        - name: windNorthward
+        where:
+        - variable: ObsType/windEastward
+          is_in: 280
+        action:
+          name: assign error
+          error parameter: 2.628
+
       # Create PreUseFlag Group Variable (usage in GSI read_prepbufr)
       # Initialize
       - filter: Variable Assignment
@@ -133,7 +128,6 @@
         assignments:
         - name: PreUseFlag/windNorthward
           value: 0
-
       - filter: Variable Assignment
         where:
         - variable:
@@ -150,7 +144,6 @@
         assignments:
         - name: PreUseFlag/windNorthward
           value: 100
-
       - filter: Variable Assignment
         where:
         - variable:
@@ -167,6 +160,15 @@
         assignments:
         - name: PreUseFlag/windNorthward
           value: 101
+      - filter: Variable Assignment
+        where:
+        - variable:
+            name: QualityMarker/stationPressure
+          is_in: 8-15
+        assignments:
+        - name: PreUseFlag/windEastward
+          value: 102
+
       # Error inflation based on pressure check (setupw.f90)
       # WindEastward
       - filter: Perform Action
@@ -174,7 +176,7 @@
         - name: windEastward
         where:
         - variable: ObsType/windEastward
-          is_in: 281
+          is_in: 280
         action:
           name: inflate error
           inflation variable:
@@ -191,7 +193,7 @@
         - name: windNorthward
         where:
         - variable: ObsType/windNorthward
-          is_in: 281
+          is_in: 280
         action:
           name: inflate error
           inflation variable:
@@ -285,7 +287,7 @@
         function absolute threshold:
         - name: ObsFunction/WindsSPDBCheck
           options:
-            wndtype:    [ 281 ]
+            wndtype:    [ 280 ]
             cgross:     [ 6.0 ]
             error_min:  [ 1.4 ]
             error_max:  [ 6.1 ]
@@ -304,7 +306,7 @@
         function absolute threshold:
         - name: ObsFunction/WindsSPDBCheck
           options:
-            wndtype:    [ 281 ]
+            wndtype:    [ 280 ]
             cgross:     [ 6.0 ]
             error_min:  [ 1.4 ]
             error_max:  [ 6.1 ]
@@ -322,7 +324,7 @@
         function absolute threshold:
         - name: ObsFunction/WindsSPDBCheck
           options:
-            wndtype:    [ 281 ]
+            wndtype:    [ 280 ]
             cgross:     [ 4.2 ]
             error_min:  [ 1.4 ]
             error_max:  [ 6.1 ]
@@ -341,7 +343,7 @@
         function absolute threshold:
         - name: ObsFunction/WindsSPDBCheck
           options:
-            wndtype:    [ 281 ]
+            wndtype:    [ 280 ]
             cgross:     [ 4.2 ]
             error_min:  [ 1.4 ]
             error_max:  [ 6.1 ]
@@ -372,18 +374,9 @@
       - filter: Perform Action
         filter variables:
         - name: windEastward
-        where:
-        - variable: PreUseFlag/windEastward
-          is_not_in: 0, 1
-          value: is_not_valid
-        where operator: or
-        action:
-          name: reject
-      - filter: Perform Action
-        filter variables:
         - name: windNorthward
         where:
-        - variable: PreUseFlag/windNorthward
+        - variable: PreUseFlag/windEastward
           is_not_in: 0, 1
           value: is_not_valid
         where operator: or
