@@ -11,6 +11,7 @@ echo "Start ... `date`"
 dir_root="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 source $dir_root/ush/detect_machine.sh
+source $dir_root/ush/init.sh
 
 # ==============================================================================
 usage() {
@@ -22,8 +23,9 @@ usage() {
   echo "  -t  target to build for <target>    DEFAULT: $MACHINE_ID"
   echo "  -c  additional CMake options        DEFAULT: <none>"
   echo "  -v  build with verbose output       DEFAULT: NO"
+  echo "  -b  build JCB                       DEFAULT: YES"
   echo "  -f  force a clean build             DEFAULT: NO"
-  echo "  -d  include JCSDA ctest data        DEFAULT: NO"
+  echo "  -d  include HAFS ctest data         DEFAULT: NO"
   echo "  -a  build everything in bundle      DEFAULT: NO"
   echo "  -h  display this message and quit"
   echo
@@ -39,11 +41,14 @@ BUILD_TARGET="${MACHINE_ID:-'localhost'}"
 BUILD_JOBS="${BUILD_JOBS:-8}"
 BUILD_VERBOSE="${BUILD_VERBOSE:-"NO"}"
 CLONE_JCSDADATA="NO"
+BUILD_TESTING="OFF"
+BUILD_HAFS_TEST="NO"
 CLEAN_BUILD="NO"
 BUILD_JCSDA="NO"
+BUILD_JCB="YES"
 COMPILER="${COMPILER:-intel}"
 
-while getopts "p:t:c:hvdfa" opt; do
+while getopts "p:t:c:b:hvdfa" opt; do
   case $opt in
     p)
       INSTALL_PREFIX=$OPTARG
@@ -54,11 +59,14 @@ while getopts "p:t:c:hvdfa" opt; do
     c)
       CMAKE_OPTS=$OPTARG
       ;;
+    b)
+      BUILD_JCB=$OPTARG
+      ;;
     v)
       BUILD_VERBOSE=YES
       ;;
     d)
-      CLONE_JCSDADATA=YES
+      BUILD_HAFS_TEST=YES
       ;;
     f)
       CLEAN_BUILD=YES
@@ -78,7 +86,7 @@ case ${BUILD_TARGET} in
     source $dir_root/ush/module-setup.sh
     module use $dir_root/modulefiles
     module load HDAS/$BUILD_TARGET.$COMPILER
-    CMAKE_OPTS+=" -DMPIEXEC_EXECUTABLE=$MPIEXEC_EXEC -DMPIEXEC_NUMPROC_FLAG=$MPIEXEC_NPROC -DBUILD_GSIBEC=ON"
+    CMAKE_OPTS+=" -DMPIEXEC_EXECUTABLE=$MPIEXEC_EXEC -DMPIEXEC_NUMPROC_FLAG=$MPIEXEC_NPROC -DMACHINE_ID=$MACHINE_ID"
     module list
     ;;
   $(hostname))
@@ -89,7 +97,9 @@ case ${BUILD_TARGET} in
     ;;
 esac
 
-CMAKE_OPTS+=" -DCLONE_JCSDADATA=$CLONE_JCSDADATA -DMACHINE=$BUILD_TARGET"
+#CMAKE_OPTS+=" -DCLONE_JCSDADATA=$CLONE_JCSDADATA -DMACHINE=$BUILD_TARGET -DBUILD_TESTING=$BUILD_TESTING"
+#CMAKE_OPTS+=" -DCLONE_JCSDADATA=$CLONE_JCSDADATA -DMACHINE=$BUILD_TARGET"
+CMAKE_OPTS+="  -DBUILD_TESTING=$BUILD_TESTING"
 # TODO: Remove LD_LIBRARY_PATH line as soon as permanent solution is available
 if [[ $BUILD_TARGET == 'wcoss2' ]]; then
     export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/cray/pe/mpich/8.1.19/ofi/intel/19.0/lib"
@@ -116,6 +126,55 @@ mkdir -p $dir_root/bundle/test-data-release/
 ln -sf $HDASAPP_TESTDATA/crtm $dir_root/bundle/fix/test-data-release/crtm
 ln -sf $HDASAPP_TESTDATA/crtm $dir_root/bundle/test-data-release/crtm
 
+# Install the jcb clients
+if [[ $BUILD_JCB == 'YES' ]]; then
+  cd $dir_root/sorc/jcb
+  #python jcb_client_init.py
+  # Build an example jedi.yaml
+  #PYTHONPATH="${PYTHONPATH}:$dir_root/sorc/jcb/src/:$dir_root/build/lib/python3.*:${dir_root}/sorc/wxflow/src"
+  #cd $dir_root/sorc/jcb/src/jcb/configuration/apps/hdas/test/client_integration
+  #python run.py
+  # Link the RDASApp/parm/jcb-hdas regular folder instead of submodule
+  cd $dir_root/sorc/jcb/src/jcb/configuration/apps/
+  ln -sf $dir_root/parm/jcb-hdas hdas
+  cd ${BUILD_DIR}
+fi
+
+# Create super yamls and link in test data
+if [[ $BUILD_HAFS_TEST == 'YES' ]]; then
+
+  # Build the ctest yamls - gen_yaml
+  cd $dir_root/hafs-test/validated_yamls
+  ./gen_yaml_ctest.sh
+
+  # Build the ctest yamls - jcb
+  PYTHONPATH="${PYTHONPATH}:$dir_root/sorc/jcb/src/:$dir_root/build/lib/python3.*:${dir_root}/sorc/wxflow/src"
+
+  cd $dir_root/hafs-test/testinput
+
+  ctest_yamls=(
+    # Algorithm ctests
+    hafs_fv3jedi_2024070806_3denvar.yaml
+    # Observation ctests (fv3jedi & 3dvar only)
+    #hafs_fv3jedi_2024070806_3dvar_conv_surface.yaml
+  )
+
+  cp $dir_root/parm/jcb-hdas/test/ci/run_jcb_ctest.py .
+  #for ctest_yaml in "${ctest_yamls[@]}"; do
+  #  jcb_config="jcb-$ctest_yaml"
+  #  cp $dir_root/parm/jcb-hdas/test/ci/$jcb_config .
+  #  python run_jcb_ctest.py 2024070806 $jcb_config $ctest_yaml
+  #  ctest=${ctest_yaml%.yaml}
+  #done
+  cd ${BUILD_DIR}
+
+  # Link in test data for experimrnts: FV3-JEDI
+  echo "Linking in test data for FV3-JEDI case"
+  $dir_root/hafs-test/scripts/link_fv3jedi_expr.sh
+fi
+
+CMAKE_OPTS+=" -DMPIEXEC_MAX_NUMPROCS:STRING=120 -DBUILD_HAFS_TEST=$BUILD_HAFS_TEST"
+
 # Configure
 echo "Configuring ... `date`"
 set -x
@@ -130,7 +189,8 @@ set -x
 if [[ $BUILD_JCSDA == 'YES' ]]; then
   make -j ${BUILD_JOBS:-8} VERBOSE=$BUILD_VERBOSE
 else
-  builddirs="fv3-jedi iodaconv bufr-query da-utils"
+  #builddirs="fv3-jedi iodaconv bufr-query da-utils"
+  builddirs="fv3-jedi bufr-query"
   for b in $builddirs; do
     cd $b
     set +x      

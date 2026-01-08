@@ -1,0 +1,72 @@
+Test     : CostJo   : Nonlinear Jo(adpupa_airTemperature_120) = 0.0000000000000000e+00 --- No Observations
+Test     : CostFunction: Nonlinear J = 0.0000000000000000e+00
+Test     : CostFunction::addIncrement: Analysis: 
+Test     : ----------------------------------------------------------------------------------------------------
+Test     : State print | number of fields = 29 | cube sphere face size: C660
+Test     : eastward_wind                                | Min:-4.5931037902832031e+01 Max:+3.8224761962890625e+01 RMS:+1.1840084524444320e+01
+Test     : northward_wind                               | Min:-3.7719905853271484e+01 Max:+4.5259819030761719e+01 RMS:+8.6611536876097439e+00
+Test     : upward_air_velocity                          | Min:-7.7010669708251953e+00 Max:+1.5697523117065430e+01 RMS:+3.0932904886656032e-01
+Test     : air_temperature                              | Min:+1.9332798767089844e+02 Max:+3.0548831176757812e+02 RMS:+2.6272053310131463e+02
+Test     : air_pressure_thickness                       | Min:+1.8247018432617188e+02 Max:+2.1162341308593750e+03 RMS:+1.3357701574554387e+03
+Test     : air_pressure_at_surface                      | Min:+7.3820581100463867e+04 Max:+1.0146624482727051e+05 RMS:+9.8136989737645403e+04
+Test     : layer_thickness                              | Min:-6.1172832031250000e+03 Max:-2.0891719818115234e+01 RMS:+1.0125438508851604e+03
+Test     : water_vapor_mixing_ratio_wrt_moist_air       | Min:+0.0000000000000000e+00 Max:+2.1643737331032753e-02 RMS:+8.8331128655146623e-03
+Test     : cloud_liquid_ice                             | Min:+0.0000000000000000e+00 Max:+1.0946365073323250e-03 RMS:+1.5645796244958785e-05
+Test     : cloud_liquid_water                           | Min:+0.0000000000000000e+00 Max:+1.7946281004697084e-03 RMS:+3.2171165074618668e-05
+Test     : rain_water                                   | Min:+0.0000000000000000e+00 Max:+9.4379540532827377e-03 RMS:+1.1216918112949524e-04
+Test     : snow_water                                   | Min:+0.0000000000000000e+00 Max:+8.2219000905752182e-03 RMS:+2.8296750858941084e-04
+Test     : graupel                                      | Min:+0.0000000000000000e+00 Max:+4.1783684864640236e-03 RMS:+2.8722820312550692e-05
+Test     : cloud_ice_number_concentration               | Min:+0.0000000000000000e+00 Max:+1.7736282000000000e+07 RMS:+6.5941067728427751e+05
+Test     : rain_number_concentration                    | Min:+0.0000000000000000e+00 Max:+3.5626503906250000e+04 RMS:+4.9190651209850364e+02
+Test     : ozone_mass_mixing_ratio                      | Min:+3.6477764808751090e-08 Max:+1.5547982911812142e-05 RMS:+3.6239286271143146e-06
+Test     : geopotential_height_times_gravity_at_surface | Min:-1.0763557867221607e-07 Max:+2.6962416015625000e+04 RMS:+5.4916928123722591e+03
+Test     : slmsk                                        | Min:+0.0000000000000000e+00 Max:+1.0000000000000000e+00 RMS:+7.8783216645279486e-01
+Test     : sheleg                                       | Min:+0.0000000000000000e+00 Max:+0.0000000000000000e+00 RMS:+0.0000000000000000e+00
+Test     : skin_temperature_at_surface                  | Min:+2.8197956213139020e+02 Max:+3.0618085105633423e+02 RMS:+2.9899544530697784e+02
+Test     : vtype                                        | Min:+0.0000000000000000e+00 Max:+1.6000000000000000e+01 RMS:+7.2022054320464539e+00
+Test     : stype                                        | Min:+0.0000000000000000e+00 Max:+1.3000000000000000e+01 RMS:+5.7843599488936954e+00
+Test     : vfrac                                        | Min:+0.0000000000000000e+00 Max:+8.5773389041423798e-01 RMS:+4.1810451575334207e-01
+Test     : stc                                          | Min:+2.8366258873259420e+02 Max:+3.1210426427961778e+02 RMS:+3.0001685481834164e+02
+Test     : soilMoistureVolumetric                       | Min:+2.3330157922990691e-02 Max:+1.0000000000000000e+00 RMS:+6.3810239441969741e-01
+Test     : totalSnowDepth                               | Min:+0.0000000000000000e+00 Max:+0.0000000000000000e+00 RMS:+0.0000000000000000e+00
+Test     : eastward_wind_at_surface                     | Min:-2.9844841003417969e+01 Max:+2.8648815155029297e+01 RMS:+5.2883023595850176e+00
+Test     : northward_wind_at_surface                    | Min:-2.5447568893432617e+01 Max:+2.8009872436523438e+01 RMS:+6.0430836573629909e+00
+Test     : f10m                                         | Min:+9.4584006827551792e-01 Max:+9.9821931522923646e-01 RMS:+9.8344195327713757e-01
+Test     : ----------------------------------------------------------------------------------------------------
+Test     : CostJo   : Nonlinear Jo(adpupa_airTemperature_120) = 0 --- No Observations
+Test     : CostFunction: Nonlinear J = 0
+Test     : CostFunction::addIncrement: Analysis: 
+Test     : ----------------------------------------------------------------------------------------------------
+Test     : State print | number of fields = 29 | cube sphere face size: C660
+Test     : eastward_wind                                | Min:-4.5931037902832031e+01 Max:+3.8224761962890625e+01 RMS:+1.1840084524444320e+01
+Test     : northward_wind                               | Min:-3.7719905853271484e+01 Max:+4.5259819030761719e+01 RMS:+8.6611536876097439e+00
+Test     : upward_air_velocity                          | Min:-7.7010669708251953e+00 Max:+1.5697523117065430e+01 RMS:+3.0932904886656032e-01
+Test     : air_temperature                              | Min:+1.9332798767089844e+02 Max:+3.0548831176757812e+02 RMS:+2.6272053310131463e+02
+Test     : air_pressure_thickness                       | Min:+1.8247018432617188e+02 Max:+2.1162341308593750e+03 RMS:+1.3357701574554387e+03
+Test     : air_pressure_at_surface                      | Min:+7.3820581100463867e+04 Max:+1.0146624482727051e+05 RMS:+9.8136989737645403e+04
+Test     : layer_thickness                              | Min:-6.1172832031250000e+03 Max:-2.0891719818115234e+01 RMS:+1.0125438508851604e+03
+Test     : water_vapor_mixing_ratio_wrt_moist_air       | Min:+0.0000000000000000e+00 Max:+2.1643737331032753e-02 RMS:+8.8331128655146623e-03
+Test     : cloud_liquid_ice                             | Min:+0.0000000000000000e+00 Max:+1.0946365073323250e-03 RMS:+1.5645796244958785e-05
+Test     : cloud_liquid_water                           | Min:+0.0000000000000000e+00 Max:+1.7946281004697084e-03 RMS:+3.2171165074618668e-05
+Test     : rain_water                                   | Min:+0.0000000000000000e+00 Max:+9.4379540532827377e-03 RMS:+1.1216918112949524e-04
+Test     : snow_water                                   | Min:+0.0000000000000000e+00 Max:+8.2219000905752182e-03 RMS:+2.8296750858941084e-04
+Test     : graupel                                      | Min:+0.0000000000000000e+00 Max:+4.1783684864640236e-03 RMS:+2.8722820312550692e-05
+Test     : cloud_ice_number_concentration               | Min:+0.0000000000000000e+00 Max:+1.7736282000000000e+07 RMS:+6.5941067728427751e+05
+Test     : rain_number_concentration                    | Min:+0.0000000000000000e+00 Max:+3.5626503906250000e+04 RMS:+4.9190651209850364e+02
+Test     : ozone_mass_mixing_ratio                      | Min:+3.6477764808751090e-08 Max:+1.5547982911812142e-05 RMS:+3.6239286271143146e-06
+Test     : geopotential_height_times_gravity_at_surface | Min:-1.0763557867221607e-07 Max:+2.6962416015625000e+04 RMS:+5.4916928123722591e+03
+Test     : slmsk                                        | Min:+0.0000000000000000e+00 Max:+1.0000000000000000e+00 RMS:+7.8783216645279486e-01
+Test     : sheleg                                       | Min:+0.0000000000000000e+00 Max:+0.0000000000000000e+00 RMS:+0.0000000000000000e+00
+Test     : skin_temperature_at_surface                  | Min:+2.8197956213139020e+02 Max:+3.0618085105633423e+02 RMS:+2.9899544530697784e+02
+Test     : vtype                                        | Min:+0.0000000000000000e+00 Max:+1.6000000000000000e+01 RMS:+7.2022054320464539e+00
+Test     : stype                                        | Min:+0.0000000000000000e+00 Max:+1.3000000000000000e+01 RMS:+5.7843599488936954e+00
+Test     : vfrac                                        | Min:+0.0000000000000000e+00 Max:+8.5773389041423798e-01 RMS:+4.1810451575334207e-01
+Test     : stc                                          | Min:+2.8366258873259420e+02 Max:+3.1210426427961778e+02 RMS:+3.0001685481834164e+02
+Test     : soilMoistureVolumetric                       | Min:+2.3330157922990691e-02 Max:+1.0000000000000000e+00 RMS:+6.3810239441969741e-01
+Test     : totalSnowDepth                               | Min:+0.0000000000000000e+00 Max:+0.0000000000000000e+00 RMS:+0.0000000000000000e+00
+Test     : eastward_wind_at_surface                     | Min:-2.9844841003417969e+01 Max:+2.8648815155029297e+01 RMS:+5.2883023595850176e+00
+Test     : northward_wind_at_surface                    | Min:-2.5447568893432617e+01 Max:+2.8009872436523438e+01 RMS:+6.0430836573629909e+00
+Test     : f10m                                         | Min:+9.4584006827551792e-01 Max:+9.9821931522923646e-01 RMS:+9.8344195327713757e-01
+Test     : ----------------------------------------------------------------------------------------------------
+Test     : CostJo   : Nonlinear Jo(adpupa_airTemperature_120) = 0 --- No Observations
+Test     : CostFunction: Nonlinear J = 0

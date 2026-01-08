@@ -98,7 +98,7 @@ load("rocoto/1.3.5")
 
 setenv("CC","cc")
 setenv("CXX","CC")
-setenv("FC","ftn")
+setenv("FC","ifort")
 
 local mpiexec = '/opt/cray/pals/1.3.2/bin/mpirun'
 local mpinproc = '-n'

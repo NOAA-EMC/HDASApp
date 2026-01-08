@@ -109,19 +109,10 @@ if(BUILD_HDASBUNDLE)
     ecbuild_bundle( PROJECT iodaconv SOURCE "../sorc/iodaconv" )
   endif()
 
-# HDASApp
-  ecbuild_bundle( PROJECT hdas SOURCE "../")
-
-# ioda, ufo, fv3-jedi, and saber test data
-#---------------------------------
-  if(CLONE_JCSDADATA)
-
-   set(JCSDA_DATA_ROOT "$ENV{HDASAPP_TESTDATA}/jcsda")
-   ecbuild_bundle( PROJECT ioda-data SOURCE "${JCSDA_DATA_ROOT}/ioda-data" )
-   ecbuild_bundle( PROJECT ufo-data SOURCE "${JCSDA_DATA_ROOT}/ufo-data" )
-   ecbuild_bundle( PROJECT fv3-jedi-data SOURCE "${JCSDA_DATA_ROOT}/fv3-jedi-data" )
-
-  endif(CLONE_JCSDADATA)
+# hafs test data
+  if(BUILD_HAFS_TEST)
+    ecbuild_bundle( PROJECT hafs-test SOURCE "../hafs-test" )
+  endif()
 
 endif(BUILD_HDASBUNDLE)
 

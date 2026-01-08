@@ -1,0 +1,512 @@
+_filenames: &fv3file_names
+  filename_core: '_FV3_CORE_FILE_'
+  filename_trcr: '_FV3_TRCR_FILE_'
+  filename_sfcd: '_FV3_SFCD_FILE_'
+  filename_sfcw: '_FV3_SFCW_FILE_'
+  filename_cplr: '_FV3_CPLR_FILE_'
+
+_geometry: &geometry_configs
+  namelist filename: _INPUT_HAFS_NML_
+  akbk: bkg/_FV3_AKBK_FILE_
+  io_layout: [1,1]
+  ntiles: 1
+  fms initialization:
+    namelist filename: fmsmpp.nml
+    field table filename: field_table
+  vert coordinate: logp
+
+_ens_filenames: &ens_fv3file_names
+  filename_core: '_FV3_CORE_ENS_FILE_'
+  filename_trcr: '_FV3_TRCR_ENS_FILE_'
+  filename_sfcd: '_FV3_SFCD_ENS_FILE_'
+  filename_sfcw: '_FV3_SFCW_ENS_FILE_'
+  filename_cplr: '_FV3_CPLR_ENS_FILE_'
+
+_ens_geometry: &ens_geometry_configs
+  namelist filename: _INPUT_HAFS_ENS_NML_
+  akbk: bkg/_FV3_AKBK_ENS_FILE_
+  io_layout: [1,1]
+  ntiles: 1
+  fms initialization:
+    namelist filename: fmsmpp.nml
+    field table filename: field_table
+  vert coordinate: logp
+
+cost function:
+  cost type: 3D-Var
+  time window:
+    begin: _INITIALDATE_
+    length: PT6H
+  tolerance AD resolution change: 1.0e-13
+  geometry:
+    <<: *geometry_configs
+  other geometry:
+    <<: *ens_geometry_configs
+  analysis variables: &vars_analysis
+  - eastward_wind
+  - northward_wind
+  - upward_air_velocity
+  - air_temperature
+  - air_pressure_at_surface
+  - water_vapor_mixing_ratio_wrt_moist_air
+  - cloud_liquid_ice
+  - cloud_liquid_water
+  - ozone_mass_mixing_ratio
+  background:
+    datetime: _ANALYSISDATE_
+    filetype: fms restart
+    filename is datetime templated: true
+    datapath: bkg/
+    <<: *fv3file_names
+    state variables: &vars_state
+    - eastward_wind
+    - northward_wind
+    - upward_air_velocity
+    - air_temperature
+    - air_pressure_thickness
+    - air_pressure_at_surface
+    - layer_thickness
+    - water_vapor_mixing_ratio_wrt_moist_air
+    - cloud_liquid_ice
+    - cloud_liquid_water
+    - snow_water
+    - rain_water
+    - graupel
+    - cloud_ice_number_concentration
+    - rain_number_concentration
+    - ozone_mass_mixing_ratio
+    - geopotential_height_times_gravity_at_surface
+    - slmsk
+    - sheleg
+    - skin_temperature_at_surface
+    - vtype
+    - stype
+    - vfrac
+    - stc
+    - soilMoistureVolumetric
+    - totalSnowDepth
+    - eastward_wind_at_surface
+    - northward_wind_at_surface
+    - f10m
+    field io names: &field_io_names
+      eastward_wind: ua
+      northward_wind: va
+      upward_air_velocity: W
+      air_temperature: T
+      air_pressure_thickness: delp
+      layer_thickness: DZ
+      water_vapor_mixing_ratio_wrt_moist_air: sphum
+      cloud_liquid_water: liq_wat
+      snow_water: snowwat
+      rain_water: rainwat
+      graupel: graupel
+      cloud_ice_number_concentration: ice_nc
+      rain_number_concentration: rain_nc
+      ozone_mass_mixing_ratio: o3mr
+      skin_temperature_at_surface: tsea
+      air_pressure_at_surface: ps
+      cloud_liquid_ice: ice_wat
+      geopotential_height_times_gravity_at_surface: phis
+      soilMoistureVolumetric: smc
+      totalSnowDepth: snwdph
+      eastward_wind_at_surface: u_srf
+      northward_wind_at_surface: v_srf
+  background error:
+    covariance model: ensemble
+    members from template:
+      template:
+        datetime: _ANALYSISDATE_
+        filetype: fms restart
+        state variables: *vars_state
+        field io names: *field_io_names
+        datapath: ensemble_data/mem%mem%/
+        <<: *ens_fv3file_names
+      pattern: '%mem%'
+      nmembers: _ENS_SIZE_
+      zero padding: 3
+    localization:
+      localization method: SABER
+      saber central block:
+        saber block name: BUMP_NICAS
+        active variables: *vars_analysis
+        read:
+          io:
+            data directory: bump
+            files prefix: fv3jedi_bumpparameters_nicas_hafs_atm
+            alias:
+            - in code: common
+              in file: common_250km
+          drivers:
+             multivariate strategy: duplicated
+             read local nicas: true
+
+#------------------------------------------------------------------------------
+  observations:
+    observers:
+    - obs space:
+        name: adpupa_airTemperature_120
+        obsdatain:
+          engine:
+            type: H5File
+            obsfile: obs/hafs.#HH#.adpupa.nc
+            missing file action: "warn"
+          obsgrouping:
+            group variables: ["stationIdentification"]
+            sort variable: "pressure"
+            sort order: "descending"
+        obsdataout:
+          engine:
+            type: H5File
+            obsfile: hofx/diag_adpupa_airTemperature_120_#HH#.nc
+            allow overwrite: true
+        io pool:
+          max pool size: #TOTAL_TASKS#
+        observed variables: [airTemperature]
+        simulated variables: [airTemperature]
+      obs operator:
+        name: Composite
+        components:
+        - name: VertInterp
+          vertical coordinate: air_pressure
+          observation vertical coordinate: pressure
+          observation vertical coordinate group: MetaData
+          interpolation method: log-linear
+          variables:
+          - name: airTemperature
+
+      obs error:
+        covariance model: diagonal
+
+      # Observation Pre fitler for domain resize
+      obs pre filters:
+      # --------------------------
+      # airTemperature (120)
+      # --------------------------
+      obs pre filters:
+      - filter: Domain Check
+        apply at iterations: 0, 1
+        where:
+        - variable:
+            name: MetaData/latitude
+          minvalue: #MIN_LAT#
+          maxvalue: #MAX_LAT#
+        action:
+          name: reduce obs space
+      - filter : Domain Check
+        apply at iterations: 0, 1
+        where:
+        - variable:
+            name: MetaData/longitude
+          minvalue: #MIN_LON#
+          maxvalue: #MAX_LON#
+        action:
+          name: reduce obs space
+      # Reject all obs with QualityMarker > 3
+      - filter: RejectList
+        apply at iterations: 0,1
+        filter variables:
+        - name: airTemperature
+        where:
+        - variable: ObsType/airTemperature
+          is_not_in: 120
+        - variable: QualityMarker/airTemperature
+          is_in: 4-15
+          value: is_not_valid
+        - variable: MetaData/pressure
+          value: is_not_valid
+        where operator: or
+        action:
+          name: reduce obs space
+
+      # Time window filter
+      - filter: Domain Check
+        apply at iterations: 0,1
+        where:
+          - variable:
+              name: MetaData/timeOffset # units: s
+            minvalue: -10800
+            maxvalue:  10800
+        action:
+          name: reduce obs space
+
+      # Observation Prior Filters (QC)
+      obs prior filters:
+      # Regional Domain Check
+      - filter: Bounds Check
+        filter variables:
+        - name: airTemperature
+        test variables:
+        - name: GeoVaLs/observable_domain_mask
+          flag all filter variables if any test variable is out of bounds: true
+          minvalue: 0.0
+          maxvalue: 0.5
+
+      # Initial errror assignment
+      - filter: Perform Action
+        filter variables:
+        - name: airTemperature
+        where:
+        - variable: ObsType/airTemperature
+          is_in: 120
+        action:
+          name: assign error
+          error function:
+            name: ObsFunction/ObsErrorModelStepwiseLinear
+            options:
+              xvar:
+                name: MetaData/pressure
+              xvals: [110000, 105000, 100000, 95000, 90000, 85000, 80000, 75000, 70000, 65000, 60000, 55000, 50000, 45000, 40000, 35000, 30000, 25000, 20000, 15000, 10000, 7500, 5000, 4000, 3000, 2000, 1000, 500, 400, 300, 200, 100, 0]
+              errors: [1.2696, 1.3282, 1.3932, 1.439, 1.4354, 1.3669, 1.2552, 1.1362, 1.0397, 0.98016, 0.94757, 0.92875, 0.91714, 0.91625, 0.93506, 0.98447, 1.0699, 1.1816, 1.2862, 1.3542, 1.3831, 1.3832, 1.3534, 1.3109, 1.3018, 1.3414, 1.4017, 1.4471, 1.4744, 1.4892, 1.4964, 1.4988, 1.4962]
+      # Create PreUseFlag Group Variable (usage in GSI read_prepbufr)
+      # Initialize
+      - filter: Variable Assignment
+        assignments:
+        - name: PreUseFlag/airTemperature
+          type: int
+          source variable: QualityMarker/airTemperature
+      # Assignment
+      - filter: Variable Assignment
+        where:
+        - variable:
+            name: PreUseFlag/airTemperature
+          is_in: 1-15
+        assignments:
+        - name: PreUseFlag/airTemperature
+          value: 0
+      - filter: Variable Assignment
+        where:
+        - variable:
+            name: QualityMarker/airTemperature
+          is_in: 9, 12, 15
+        assignments:
+        - name: PreUseFlag/airTemperature
+          value: 100
+
+      - filter: Variable Assignment
+        where:
+        - variable:
+            name: QualityMarker/airTemperature
+          is_in: 4-15
+        assignments:
+        - name: PreUseFlag/airTemperature
+          value: 101
+
+      ## error inflation if observation QM is 3 or 7 (read_prepbufr.f90)
+      - filter: Perform Action
+        filter variables:
+        - name: airTemperature
+        where:
+        - variable:
+            name: QualityMarker/airTemperature
+          is_in: 3        # qm=7 observation is aleady blocked
+        action:
+          name: inflate error
+          inflation factor: 1.2
+
+      ## error inflation if observation pressure < 100 hPa (read_prepbufr.f90)
+      - filter: Perform Action
+        filter variables:
+        - name: airTemperature
+          where:
+          - variable: MetaData/pressure
+            maxvalue: 10000.
+        action:
+          name: inflate error
+          inflation factor: 1.2
+
+      # Bounds Check
+      - filter: Bounds Check
+        apply at iterations: 0,1
+        filter variables:
+        - name: airTemperature
+        minvalue: 100
+        maxvalue: 400
+
+      # Observation Post Filters (QC)
+      # -------------------------------
+      obs post filters:
+      # Calculate obs error inflation factors for duplicated observations at the same location
+      - filter: Variable Assignment
+        assignments:
+        - name: ObsErrorFactorDuplicateCheck/airTemperature
+          type: float
+          function:
+            name: ObsFunction/ObsErrorFactorDuplicateCheck
+            options:
+              use_air_pressure: yes
+              variable: airTemperature
+
+
+      ## adjusted error after initial assignment (qcmod.f90)
+      - filter: Perform Action
+        filter variables:
+        - name: airTemperature
+        where:
+        - variable: ObsType/airTemperature
+          is_in: 120
+        action:
+          name: inflate error
+          inflation variable:
+            name: ObsFunction/ObsErrorFactorConventional
+            options:
+              inflate variables: [airTemperature]
+              pressure: MetaData/pressure
+
+      ##  error inflation based on pressure check (setupt.f90)
+      - filter: Perform Action
+        filter variables:
+        - name: airTemperature
+        where:
+        - variable: ObsType/airTemperature
+          is_in: 120
+        action:
+          name: inflate error
+          inflation variable:
+            name: ObsFunction/ObsErrorFactorPressureCheck
+            options:
+              variable: airTemperature
+              inflation factor: 8.0
+
+      # Create temporary ObsErrorData
+      - filter: Variable Assignment
+        apply at iterations: 0,1
+        assignments:
+        - name: TempObsErrorData/airTemperature
+          type: float
+          function:
+            name: ObsFunction/Arithmetic
+            options:
+              variables:
+              - name: ObsErrorData/airTemperature
+      # Set ObsError set "error parameter" if < "max value"
+      - filter: Perform Action
+        apply at iterations: 0,1
+        filter variables:
+        - name: airTemperature
+        action:
+          name: assign error
+          error parameter: 1.3
+        where:
+        - variable:
+            name: ObsErrorData/airTemperature
+          maxvalue: 1.3
+        - variable:
+            name: ObsErrorData/airTemperature
+          value: is_valid
+      # Set ObsError set "error parameter" if > "min value"
+      - filter: Perform Action
+        apply at iterations: 0,1
+        filter variables:
+        - name: airTemperature
+        action:
+          name: assign error
+          error parameter: 5.6
+        where:
+        - variable:
+            name: ObsErrorData/airTemperature
+          minvalue: 5.6
+        - variable:
+            name: ObsErrorData/airTemperature
+          value: is_valid
+
+      # Gross Error Check
+      - filter: Background Check
+        apply at iterations: 0,1
+        filter variables:
+        - name: airTemperature
+        threshold: 8.0
+        action:
+          name: reject
+        where:
+        - variable: ObsType/airTemperature
+        - variable: QualityMarker/airTemperature
+          is_not_in: 3
+      # Gross Error Check: cgross*0.7 if QualityMarker=3
+      - filter: Background Check
+        apply at iterations: 0,1
+        filter variables:
+        - name: airTemperature
+        threshold: 5.6
+        action:
+          name: reject
+        where:
+        - variable: ObsType/airTemperature
+        - variable: QualityMarker/airTemperature
+          is_in: 3
+
+      # Re-assign err ObsErrorData <--- TempObsErrorData after gross error check.
+      - filter: Perform Action
+        apply at iterations: 0,1
+        filter variables:
+        - name: airTemperature
+        action:
+          name: assign error
+          error function: TempObsErrorData/airTemperature
+        where:
+        - variable:
+            name: TempObsErrorData/airTemperature
+          value: is_valid
+
+      # Inflate obs error based on duplicate check
+      - filter: Perform Action
+        filter variables:
+        - name: airTemperature
+        action:
+          name: inflate error
+          inflation variable:
+            name: ObsErrorFactorDuplicateCheck/airTemperature
+
+      # End of filter
+
+###############################################
+
+variational:
+  minimizer:
+    algorithm: DRPCG
+  iterations:
+  - ninner: 50
+    gradient norm reduction: 1e-60
+    test: on
+    geometry:
+      <<: *ens_geometry_configs
+    diagnostics:
+      departures: ombg1
+  - ninner: 50
+    gradient norm reduction: 1e-60
+    test: on
+    geometry:
+      <<: *ens_geometry_configs
+    diagnostics:
+      departures: ombg2
+final:
+  diagnostics:
+    departures: oman
+
+output:
+  filetype: fms restart
+  datapath: ./
+  prefix: analysis
+  frequency: PT3H
+  field io names:
+    eastward_wind: ua
+    northward_wind: va
+    upward_air_velocity: W
+    air_temperature: T
+    air_pressure_thickness: delp
+    layer_thickness: DZ
+    water_vapor_mixing_ratio_wrt_moist_air: sphum
+    cloud_liquid_water: liq_wat
+    snow_water: snowwat
+    rain_water: rainwat
+    graupel: graupel
+    cloud_ice_number_concentration: ice_nc
+    rain_number_concentration: rain_nc
+    ozone_mass_mixing_ratio: o3mr
+    skin_temperature_at_surface: tsea
+    air_pressure_at_surface: ps
+    cloud_liquid_ice: ice_wat
+    geopotential_height_times_gravity_at_surface: phis
+    soilMoistureVolumetric: smc
+    totalSnowDepth: snwdph
+    eastward_wind_at_surface: u_srf
+    northward_wind_at_surface: v_srf

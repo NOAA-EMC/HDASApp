@@ -38,3 +38,10 @@ option(CLONE_JCSDADATA "Clone JCSDA test data repositories" OFF)
 
 # Install utility scripts.
 add_subdirectory(ush)
+
+# Include testing.
+add_subdirectory(test)
+
+# Finalize bundle
+# ---------------
+ecbuild_bundle_finalize()
