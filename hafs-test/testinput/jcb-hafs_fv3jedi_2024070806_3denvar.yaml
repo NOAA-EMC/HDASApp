@@ -12,10 +12,10 @@ app_path_observation_chronicle: hdas/observation_chronicle/atmosphere
 # Places where we deviate from the generic file name of a yaml
 # ------------------------------------------------------------
 #final_increment_file: atmosphere_final_increment_gaussian
-output_file: atmosphere_output
-output_ensemble_increments_file: atmosphere_output_ensemble_increments_gaussian
+output_file: atmosphere_output_3denvar
+output_ensemble_increments_file: atmosphere_final_increment_3denvar
 model_file: atmosphere_model_pseudo
-initial_condition_file: atmosphere_background
+initial_condition_file: atmosphere_background_3denvar
 background_error_file: atmosphere_background_error_3denvar
 
 # Global analysis things
@@ -40,6 +40,7 @@ analysis_variables:
 - cloud_liquid_ice
 - cloud_liquid_water
 - ozone_mass_mixing_ratio
+active_variables: [eastward_wind,northward_wind,upward_air_velocity,air_temperature,air_pressure_at_surface,water_vapor_mixing_ratio_wrt_moist_air,cloud_liquid_ice,cloud_liquid_water,ozone_mass_mixing_ratio]
 
 # Testing
 # -------
@@ -153,12 +154,11 @@ MIN_LON: -105.9
 MAX_LON: -85.9
 observations:
 # Upper-air conventional
-- adpupa_airTemperature_120
-#- adpupa_airTemperature_132
+- conventional_air_raob_120t
+- conventional_air_raob_220
 #- adpupa_specificHumidity_120
 #- adpupa_specificHumidity_132
 #- adpupa_stationPressure_120
-- adpupa_winds_220
 #- adpupa_winds_232
 
 #- aircar_airTemperature_133
@@ -209,11 +209,10 @@ observations:
 #- sfcshp_winds_284
 
 # Remote
-- satwhr_abi_goes-16
-- satwhr_abi_goes-18
-- satwhr_abi_goes-19
-- satwnd_abi_goes-16
-- satwnd_abi_goes-18
+- retrieval_hiamv_abi_goes-16
+- retrieval_hiamv_abi_goes-18
+- retrieval_amv_abi_goes-16
+- retrieval_amv_abi_goes-18
 # SatRad
 #- abi_g16
 

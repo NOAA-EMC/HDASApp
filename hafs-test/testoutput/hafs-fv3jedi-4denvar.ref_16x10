@@ -1,10 +1,9 @@
 CostJo   : Nonlinear Jo(adpupa_airTemperature_120) = 0.0000000000000000e+00 --- No Observations
 CostJo   : Nonlinear Jo(adpupa_winds_220) = 0.0000000000000000e+00 --- No Observations
-CostJo   : Nonlinear Jo(satwhr_goes-16) = 6.7290257900639506e+02, nobs = 460, Jo/n = 1.4628316934921632e+00, err = 1.8140099278814970e+00
-CostJo   : Nonlinear Jo(satwhr_goes-18) = 0.0000000000000000e+00 --- No Observations
-CostJo   : Nonlinear Jo(satwhr_goes-19) = 0.0000000000000000e+00 --- No Observations
-CostJo   : Nonlinear Jo(satwind_goes-16) = 3.9970930722618874e+01, nobs = 2026, Jo/n = 1.9728988510670717e-02, err = 1.3858275027396111e+01
-CostJo   : Nonlinear Jo(satwind_goes-18) = 3.5758763835256474e+01, nobs = 1664, Jo/n = 2.1489641727918556e-02, err = 1.3959996695505508e+01
+CostJo   : Nonlinear Jo(satwhr_g16) = 6.7290257900639506e+02, nobs = 460, Jo/n = 1.4628316934921632e+00, err = 1.8140099278814970e+00
+CostJo   : Nonlinear Jo(satwhr_g18) = 0.0000000000000000e+00 --- No Observations
+CostJo   : Nonlinear Jo(satwind_g16) = 3.9970930722618874e+01, nobs = 2026, Jo/n = 1.9728988510670717e-02, err = 1.3858275027396111e+01
+CostJo   : Nonlinear Jo(satwind_g18) = 3.5758763835256474e+01, nobs = 1664, Jo/n = 2.1489641727918556e-02, err = 1.3959996695505508e+01
 CostFunction: Nonlinear J = 7.4863227356427035e+02
 DRPCGMinimizer: reduction in residual norm = 6.8376661868260150e-04
 CostFunction::addIncrement: Analysis: 
@@ -106,11 +105,10 @@ f10m                                         | Min:+9.5263453328048708e-01 Max:+
 ----------------------------------------------------------------------------------------------------
 CostJo   : Nonlinear Jo(adpupa_airTemperature_120) = 0 --- No Observations
 CostJo   : Nonlinear Jo(adpupa_winds_220) = 0 --- No Observations
-CostJo   : Nonlinear Jo(satwhr_goes-16) = 297.2068612107933, nobs = 460, Jo/n = 0.6461018721973768, err = 1.814009927881497
-CostJo   : Nonlinear Jo(satwhr_goes-18) = 0 --- No Observations
-CostJo   : Nonlinear Jo(satwhr_goes-19) = 0 --- No Observations
-CostJo   : Nonlinear Jo(satwind_goes-16) = 36.44908602531993, nobs = 2026, Jo/n = 0.01799066437577489, err = 13.85827502739611
-CostJo   : Nonlinear Jo(satwind_goes-18) = 34.05076003438757, nobs = 1664, Jo/n = 0.02046319713605022, err = 13.95999669550551
+CostJo   : Nonlinear Jo(satwhr_g16) = 297.2068612107933, nobs = 460, Jo/n = 0.6461018721973768, err = 1.814009927881497
+CostJo   : Nonlinear Jo(satwhr_g18) = 0 --- No Observations
+CostJo   : Nonlinear Jo(satwind_g16) = 36.44908602531993, nobs = 2026, Jo/n = 0.01799066437577489, err = 13.85827502739611
+CostJo   : Nonlinear Jo(satwind_g18) = 34.05076003438757, nobs = 1664, Jo/n = 0.02046319713605022, err = 13.95999669550551
 CostFunction: Nonlinear J = 367.7067072705008
 DRPCGMinimizer: reduction in residual norm = 0.0007592196799751374
 CostFunction::addIncrement: Analysis: 
@@ -212,9 +210,8 @@ f10m                                         | Min:+9.5263453328048708e-01 Max:+
 ----------------------------------------------------------------------------------------------------
 CostJo   : Nonlinear Jo(adpupa_airTemperature_120) = 0 --- No Observations
 CostJo   : Nonlinear Jo(adpupa_winds_220) = 0 --- No Observations
-CostJo   : Nonlinear Jo(satwhr_goes-16) = 297.2108794883448, nobs = 460, Jo/n = 0.6461106075833583, err = 1.814009927881497
-CostJo   : Nonlinear Jo(satwhr_goes-18) = 0 --- No Observations
-CostJo   : Nonlinear Jo(satwhr_goes-19) = 0 --- No Observations
-CostJo   : Nonlinear Jo(satwind_goes-16) = 36.44681306139348, nobs = 2026, Jo/n = 0.01798954247847655, err = 13.85827502739611
-CostJo   : Nonlinear Jo(satwind_goes-18) = 34.04303439057268, nobs = 1664, Jo/n = 0.02045855432125762, err = 13.95999669550551
+CostJo   : Nonlinear Jo(satwhr_g16) = 297.2108794883448, nobs = 460, Jo/n = 0.6461106075833583, err = 1.814009927881497
+CostJo   : Nonlinear Jo(satwhr_g18) = 0 --- No Observations
+CostJo   : Nonlinear Jo(satwind_g16) = 36.44681306139348, nobs = 2026, Jo/n = 0.01798954247847655, err = 13.85827502739611
+CostJo   : Nonlinear Jo(satwind_g18) = 34.04303439057268, nobs = 1664, Jo/n = 0.02045855432125762, err = 13.95999669550551
 CostFunction: Nonlinear J = 367.700726940311
