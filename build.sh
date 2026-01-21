@@ -137,6 +137,7 @@ if [[ $BUILD_JCB == 'YES' ]]; then
   # Link the RDASApp/parm/jcb-hdas regular folder instead of submodule
   cd $dir_root/sorc/jcb/src/jcb/configuration/apps/
   ln -sf $dir_root/parm/jcb-hdas hdas
+  ln -sf $dir_root/parm/jcb-algorithms algorithms
   cd ${BUILD_DIR}
 fi
 
@@ -155,6 +156,7 @@ if [[ $BUILD_HAFS_TEST == 'YES' ]]; then
   ctest_yamls=(
     # Algorithm ctests
     hafs_fv3jedi_2024070806_3denvar.yaml
+    hafs_fv3jedi_2024070806_4denvar.yaml
     # Observation ctests (fv3jedi & 3dvar only)
     #hafs_fv3jedi_2024070806_3dvar_conv_surface.yaml
   )
