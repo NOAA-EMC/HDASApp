@@ -134,9 +134,9 @@ if [[ $BUILD_JCB == 'YES' ]]; then
   #PYTHONPATH="${PYTHONPATH}:$dir_root/sorc/jcb/src/:$dir_root/build/lib/python3.*:${dir_root}/sorc/wxflow/src"
   #cd $dir_root/sorc/jcb/src/jcb/configuration/apps/hdas/test/client_integration
   #python run.py
-  # Link the RDASApp/parm/jcb-hdas regular folder instead of submodule
   cd $dir_root/sorc/jcb/src/jcb/configuration/apps/
   ln -sf $dir_root/parm/jcb-hdas hdas
+  cd $dir_root/sorc/jcb/src/jcb/configuration/
   ln -sf $dir_root/parm/jcb-algorithms algorithms
   cd ${BUILD_DIR}
 fi
@@ -145,11 +145,11 @@ fi
 if [[ $BUILD_HAFS_TEST == 'YES' ]]; then
 
   # Build the ctest yamls - gen_yaml
-  cd $dir_root/hafs-test/validated_yamls
-  ./gen_yaml_ctest.sh
+  #cd $dir_root/hafs-test/validated_yamls
+  #./gen_yaml_ctest.sh
 
   # Build the ctest yamls - jcb
-  PYTHONPATH="${PYTHONPATH}:$dir_root/sorc/jcb/src/:$dir_root/build/lib/python3.*:${dir_root}/sorc/wxflow/src"
+  #PYTHONPATH="${PYTHONPATH}:$dir_root/sorc/jcb/src/:$dir_root/build/lib/python3.*:${dir_root}/sorc/wxflow/src"
 
   cd $dir_root/hafs-test/testinput
 

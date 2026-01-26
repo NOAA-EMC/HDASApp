@@ -81,7 +81,7 @@ setenv('MPIEXEC_NPROC', mpinproc)
 
 setenv("CRTM_FIX","/scratch3/NCEPDEV/da/role.jedipara/GDASApp/fix/crtm/2.4.0")
 setenv("HDASAPP_TESTDATA","/scratch3/NCEPDEV/da/role.jedipara/GDASApp/testdata")
-setenv("HDASAPP_UNIT_TEST_DATA_PATH", "/scratch3/NCEPDEV/da/role.jedipara/GDASApp/unittestdata")
+--setenv("HDASAPP_UNIT_TEST_DATA_PATH", "/scratch3/NCEPDEV/da/role.jedipara/GDASApp/unittestdata")
 
 whatis("Name: ".. pkgName)
 whatis("Version: ".. pkgVersion)

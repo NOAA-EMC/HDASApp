@@ -38,11 +38,8 @@ obtype_configs=(
 # Define the basic configuration and final ctest YAMLs
 declare -A basic_configs
 basic_configs=(
-    #["fv3jedi_3dvar.yaml"]="rrfs_fv3jedi_20240708_3dvar.yaml"
     ["fv3jedi_3denvar.yaml"]="hafs_fv3jedi_20240708_3denvar.yaml"
-    #["fv3jedi_hybrid3denvar.yaml"]="rrfs_fv3jedi_20240708_hybrid3denvar.yaml"
-    #["fv3jedi_getkf_observer.yaml"]="rrfs_fv3jedi_20240708_getkf_observer.yaml"
-    #["fv3jedi_getkf_solver.yaml"]="rrfs_fv3jedi_20240708_getkf_solver.yaml"
+    #["fv3jedi_4denvar.yaml"]="hafs_fv3jedi_20240708_4denvar.yaml"
 )
 
 # Loop over basic configs

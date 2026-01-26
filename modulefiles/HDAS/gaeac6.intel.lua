@@ -1,5 +1,5 @@
 help([[
-Load environment for running the GDAS application with Intel compilers and MPI.
+Load environment for running the HDAS application with Intel compilers and MPI.
 ]])
 
 local pkgName    = myModuleName()
@@ -90,10 +90,10 @@ setenv('MPIEXEC_EXEC', mpiexec)
 setenv('MPIEXEC_NPROC', mpinproc)
 
 setenv("CRTM_FIX","/gpfs/f6/ira-sti/world-shared/GDASApp/fix/crtm/2.4.0")
-setenv("GDASAPP_TESTDATA","/gpfs/f6/ira-sti/world-shared/GDASApp/testdata")
-setenv("GDASAPP_UNIT_TEST_DATA_PATH", "/gpfs/f6/ira-sti/world-shared/GDASApp/unittestdata")
+setenv("HDASAPP_TESTDATA","/gpfs/f6/ira-sti/world-shared/GDASApp/testdata")
+setenv("HDASAPP_UNIT_TEST_DATA_PATH", "/gpfs/f6/ira-sti/world-shared/GDASApp/unittestdata")
 
 whatis("Name: ".. "pkgName")
 whatis("Version: ".. "pkgVersion")
-whatis("Category: GDASApp")
-whatis("Description: Load all libraries needed for GDASApp")
+whatis("Category: HDASApp")
+whatis("Description: Load all libraries needed for HDASApp")
