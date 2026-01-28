@@ -34,6 +34,7 @@ set( ENABLE_MPI ON CACHE BOOL "Compile with MPI" )
 # Handle user options.
 option(BUILD_HDASBUNDLE "Build HDAS Bundle" ON)
 option(CLONE_JCSDADATA "Clone JCSDA test data repositories" OFF)
+option(BUILD_IODA_CONVERTERS "Build IODA Converters" OFF)
 
 # Depend path for non-ecbuild packages
 set(DEPEND_LIB_ROOT ${CMAKE_CURRENT_BINARY_DIR}/Depends)
@@ -104,7 +105,6 @@ if(BUILD_HDASBUNDLE)
   ecbuild_bundle( PROJECT da-utils SOURCE "../sorc/da-utils" )
 
 # Build IODA converters
-  option(BUILD_IODA_CONVERTERS "Build IODA Converters" ON)
   if(BUILD_IODA_CONVERTERS)
     ecbuild_bundle( PROJECT iodaconv SOURCE "../sorc/iodaconv" )
   endif()

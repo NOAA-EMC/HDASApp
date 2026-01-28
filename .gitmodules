@@ -37,10 +37,6 @@
 	path = sorc/fv3-jedi
 	url = https://github.com/jcsda/fv3-jedi.git
  	branch = develop
-[submodule "sorc/iodaconv"]
-	path = sorc/iodaconv
-	url = https://github.com/JCSDA-internal/ioda-converters.git
-        branch = develop
 [submodule "sorc/crtm"]
 	path = sorc/crtm
 	url = https://github.com/jcsda/crtm.git

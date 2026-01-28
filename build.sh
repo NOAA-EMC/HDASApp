@@ -192,7 +192,7 @@ if [[ $BUILD_JCSDA == 'YES' ]]; then
   make -j ${BUILD_JOBS:-8} VERBOSE=$BUILD_VERBOSE
 else
   #builddirs="fv3-jedi iodaconv bufr-query da-utils"
-  builddirs="fv3-jedi bufr-query"
+  builddirs="fv3-jedi bufr-query da-utils"
   for b in $builddirs; do
     cd $b
     set +x      
