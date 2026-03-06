@@ -27,8 +27,6 @@
        obs bias:
          input file: obs/satbias_radiance_cris-fsr_npp_t{{HH}}z.nc
          output file: bc/out_satbias_radiance_cris-fsr_npp_t{{HH}}z.nc
-         variables without bc: [brightnessTemperature]
-         channels: *radiance_cris-fsr_npp_channels
          variational bc:
            predictors:
            - name: constant
@@ -195,7 +193,7 @@
          filter variables:
          - name: brightnessTemperature
            channels: *radiance_cris-fsr_npp_channels
-         horizontal_mesh: 145
+         horizontal_mesh: 90
          use_reduced_horizontal_grid: true
          distance_norm: geodesic
          priority_variable: DerivedMetaData/cloudFree
