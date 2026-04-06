@@ -1,0 +1,249 @@
+    - obs space:
+        name: ascat_winds_290
+        obsdatain:
+          engine:
+            type: H5File
+            obsfile: obs/hafs.t{{HH}}z.conventinoal_osw_ascatw.nc 
+            missing file action: "warn"
+        obsdataout:
+          engine:
+            type: H5File
+            obsfile: hofx/diag_conventional_osw_ascatw_t{{HH}}z.nc
+            allow overwrite: true
+        io pool:
+          max pool size: {{TOTAL_TASKS}} 
+        observed variables: [windEastward, windNorthward]
+        simulated variables: [windEastward, windNorthward]
+
+      obs operator:
+        name: VertInterp
+        vertical coordinate: geopotential_height
+        observation vertical coordinate group: DerivedVariables
+        observation vertical coordinate: adjustedHeight
+        interpolation method: log-linear
+        hofx scaling field group: DerivedVariables
+        hofx scaling field: SurfaceWindScalingHeight
+        variables:
+        - name: windEastward
+        - name: windNorthward
+
+      linear obs operator:
+        name: VertInterp
+        vertical coordinate: geopotential_height
+        observation vertical coordinate group: DerivedVariables
+        observation vertical coordinate: adjustedHeight
+        interpolation method: linear
+
+      # Observation Pre Filters (QC)
+      # ---------------------------------
+      obs pre filters:
+      - filter: Domain Check
+        apply at iterations: 0, 1
+        where:
+        - variable:
+            name: MetaData/latitude
+          minvalue: {{MIN_LAT}}
+          maxvalue: {{MAX_LAT}}
+        action:
+          name: reduce obs space
+      - filter : Domain Check
+        apply at iterations: 0, 1
+        where:
+        - variable:
+            name: MetaData/longitude
+          minvalue: {{MIN_LON}} 
+          maxvalue: {{MAX_LON}}
+        action:
+          name: reduce obs space
+
+      # Reject all obs with QualityMarker > 3
+      - filter: RejectList
+        apply at iterations: 0,1
+        filter variables:
+        - name: windEastward
+        - name: windNorthward
+        where:
+        - variable: ObsType/windEastward
+          is_not_in: 290
+        - variable: QualityMarker/windEastward
+          is_in: 4-15
+          value: is_not_valid
+        - variable: MetaData/pressure
+          value: is_not_valid
+        where operator: or
+        action:
+          name: reduce obs space
+      # Observation Prior Filters (QC)
+      # --------------------------------
+      obs prior filters:
+      # Regional Domain Check
+      - filter: Bounds Check
+        filter variables:
+        - name: windEastward
+        - name: windNorthward
+        test variables:
+        - name: GeoVaLs/observable_domain_mask
+          flag all filter variables if any test variable is out of bounds: true
+          minvalue: 0.0
+          maxvalue: 0.5
+      # Apply variable changes needed for rescaled height coordinate
+      - filter: Variable Transforms
+        Transform: AdjustedHeightCoordinate
+        SkipWhenNoObs: false
+
+      # Apply variable changes needed for wind scaling
+      - filter: Variable Transforms
+        Transform: SurfaceWindScalingHeight
+        SkipWhenNoObs: false
+
+      # Assign the initial observation error (constant value, 1.5 m/s right now).
+      - filter: Perform Action
+        filter variables:
+        - name: windEastward
+        - name: windNorthward
+        action:
+          name: assign error
+          error parameter: 1.5
+
+      # Observation Post Filters (QC)
+      # -------------------------------
+      obs post filters:
+      # Reject all ASCAT (Type 290) winds with tsavg <= 273.0 (surface temperature)
+      - filter: Perform Action
+        filter variables:
+        - name: windEastward
+        - name: windNorthward
+        where:
+        - variable: ObsType/windEastward
+          is_in: 290
+      #   - variable: GeoVaLs/surface_temperature
+        - variable: GeoVaLs/skin_temperature_at_surface_where_land
+          maxvalue: 273.
+        action:
+          name: reject
+      # Reject all ASCAT (Type 290) winds with isflg /= 0 (non-water surface)
+      - filter: Perform Action
+        filter variables:
+        - name: windEastward
+        - name: windNorthward
+        where:
+        - variable: ObsType/windEastward
+          is_in: 290
+        - variable: GeoVaLs/water_area_fraction
+          maxvalue: 0.99
+        action:
+          name: reject
+
+      # Reject ASCAT (Type 290) when observed component deviates from background by more than 5.0 m/s 
+      # NOTE: This check can reject a u- or v-component of the same observation independently, 
+      # which is fundamentally different from how GSI rejects obs 
+      # (both components are rejected if either component fails a check).
+      - filter: Bounds Check
+        filter variables:
+        - name: windEastward
+        - name: windNorthward
+        test variables:
+        - name: ObsFunction/Arithmetic
+          options:
+            variables:
+            - name: ObsValue/windEastward
+            - name: HofX/windEastward
+            coefs: [1.0, -1.0]
+        minvalue: -5.0
+        maxvalue: 5.0
+
+      - filter: Bounds Check
+        filter variables:
+        - name: windEastward
+        - name: windNorthward
+        test variables:
+        - name: ObsFunction/Arithmetic
+          options:
+            variables:
+            - name: ObsValue/windNorthward
+            - name: HofX/windNorthward
+            coefs: [1.0, -1.0]
+        minvalue: -5.0
+        maxvalue: 5.0
+
+      # Reject ASCAT (Type 290) when ambiguity check fails (returned value is negative)
+      - filter: Bounds Check
+        filter variables:
+        - name: windEastward
+        - name: windNorthward
+        where:
+        - variable: ObsType/windEastward
+          is_in: 290
+        test variables:
+        - name: ObsFunction/ScatWindsAmbiguityCheck
+          options:
+            minimum_uv: 0.0001 # hard-coding a minimum-uv for transparancy, want this to basically be zero
+        maxvalue: 0.
+        action:
+          name: reject
+
+      # All scatwinds must adjust errors based on ObsErrorFactorPressureCheck.
+      # This check will inflate errors for obs that are too close to either
+      # the model top or bottom.
+      - filter: Perform Action
+        filter variables:
+        - name: windEastward
+        where:
+        - variable:
+            name: ObsType/windEastward
+          is_in: 290-291
+        action:
+          name: inflate error
+          inflation variable:
+            name: ObsFunction/ObsErrorFactorPressureCheck
+            options:
+              variable: windEastward
+              inflation factor: 4.0
+
+      - filter: Perform Action
+        filter variables:
+        - name: windNorthward
+        where:
+        - variable:
+            name: ObsType/windNorthward
+          is_in: 290-291
+        action:
+          name: inflate error
+          inflation variable:
+            name: ObsFunction/ObsErrorFactorPressureCheck
+            options:
+              variable: windNorthward
+              inflation factor: 4.0
+
+      # Gross Error Check (windEastward)
+      - filter: Background Check
+        apply at iterations: 0,1
+        filter variables:
+        - name: windEastward
+        function absolute threshold:
+        - name: ObsFunction/WindsSPDBCheck
+          options:
+            wndtype:    [ 290 ]
+            cgross:     [ 6.0 ]
+            error_min:  [ 1.4 ]
+            error_max:  [ 6.1 ]
+            variable: windEastward
+        action:
+          name: reject
+
+      # Gross Error Check (windNorthward)
+      - filter: Background Check
+        apply at iterations: 0,1
+        filter variables:
+        - name: windNorthward
+        function absolute threshold:
+        - name: ObsFunction/WindsSPDBCheck
+          options:
+            wndtype:    [ 290 ]
+            cgross:     [ 6.0 ]
+            error_min:  [ 1.4 ]
+            error_max:  [ 6.1 ]
+            variable: windNorthward
+        action:
+          name: reject
+
