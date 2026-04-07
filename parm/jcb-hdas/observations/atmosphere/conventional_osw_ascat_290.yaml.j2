@@ -3,12 +3,12 @@
         obsdatain:
           engine:
             type: H5File
-            obsfile: obs/hafs.t{{HH}}z.conventinoal_osw_ascatw.nc 
+            obsfile: obs/hafs.t{{HH}}z.conventinoal_osw_ascat.nc 
             missing file action: "warn"
         obsdataout:
           engine:
             type: H5File
-            obsfile: hofx/diag_conventional_osw_ascatw_t{{HH}}z.nc
+            obsfile: hofx/diag_conventional_osw_ascat_t{{HH}}z.nc
             allow overwrite: true
         io pool:
           max pool size: {{TOTAL_TASKS}} 
