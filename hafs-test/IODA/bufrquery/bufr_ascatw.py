@@ -8,7 +8,7 @@ import bufr
 from bufr.obs_builder import ObsBuilder, add_main_functions, map_path, add_dummy_variable
 
 
-MAPPING_PATH = map_path('prepbufr_ascatw.yaml')
+MAPPING_PATH = map_path('bufr_ascatw.yaml')
 
 
 class AscatwPrepbufrObsBuilder(ObsBuilder):
