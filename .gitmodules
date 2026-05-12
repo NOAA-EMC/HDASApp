@@ -19,8 +19,8 @@
         branch = develop
 [submodule "sorc/ufo"]
 	path = sorc/ufo
-	url = https://github.com/jcsda/ufo.git
-        branch = develop
+        url = https://github.com/JingCheng-NOAA/ufo.git
+        branch = gpsro_fix
 [submodule "sorc/fv3"]
 	path = sorc/fv3
 	url = https://github.com/jcsda/GFDL_atmos_cubed_sphere.git
