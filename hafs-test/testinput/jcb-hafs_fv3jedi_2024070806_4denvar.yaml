@@ -153,8 +153,8 @@ MIN_LON: -105.9
 MAX_LON: -85.9
 observations:
 # Upper-air conventional
-- conventional_air_raob_120t
-- conventional_air_raob_220
+#- conventional_air_raob_120t
+#- conventional_air_raob_220
 #- adpupa_airTemperature_132
 #- adpupa_specificHumidity_120
 #- adpupa_specificHumidity_132
@@ -210,15 +210,15 @@ observations:
 #- sfcshp_winds_284
 
 # Remote
-- retrieval_hiamv_abi_goes-16
-- retrieval_hiamv_abi_goes-18
-- retrieval_amv_abi_goes-16
-- retrieval_amv_abi_goes-18
-#- satwhr_abi_goes-16
-#- satwhr_abi_goes-18
-#- satwhr_abi_goes-19
-#- satwnd_abi_goes-16
-#- satwnd_abi_goes-18
+#- retrieval_hiamv_abi_goes-16
+#- retrieval_hiamv_abi_goes-18
+#- retrieval_amv_abi_goes-16
+#- retrieval_amv_abi_goes-18
+- retrieval_amv_serivi_m8
+- retrieval_amv_serivi_m9
+- retrieval_amv_serivi_m10
+- retrieval_amv_serivi_m11
+
 
 # SatRad
 #- abi_g16
