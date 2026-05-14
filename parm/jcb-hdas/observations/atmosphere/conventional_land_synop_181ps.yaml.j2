@@ -1,9 +1,12 @@
      - obs space:
          name: surface_ps_181
+         distribution:
+           name: "{{distribution_type}}"
+           halo size: 500e3
          obsdatain:
            engine:
              type: H5File
-             obsfile: obs/hafs.t{{HH}}z.conventional_land_synop.nc
+             obsfile: obs/hafs.t{{HH}}z.conventional_land_synop_181ps.nc
              missing file action: "warn"
            obsgrouping:
              group variables: ["stationIdentification"]
@@ -12,13 +15,12 @@
          obsdataout:
            engine:
              type: H5File
-             obsfile: hofx/diag_conventional_land_synopps181_t{{HH}}z.nc
+             obsfile: hofx/diag_conventional_land_synop_181ps_t{{HH}}z.nc
              allow overwrite: true
          io pool:
-           max pool size: {{TOTAL_TASKS}}
+           max pool size: {{POOL_SIZE}}
          observed variables: [stationPressure]
          simulated variables: [stationPressure]
- 
        obs operator:
          name: SfcCorrected
          variables:
@@ -26,15 +28,12 @@
          da_psfc_scheme: GSL
          geovar_sfc_geomz: height_above_mean_sea_level_at_surface
          geovar_geomz: geopotential_height
- 
        linear obs operator:
          name: Identity
          variables:
          - name: stationPressure
- 
        obs error:
          covariance model: diagonal
- 
        obs pre filters:
        - filter: Domain Check
          apply at iterations: 0, 1
@@ -54,7 +53,6 @@
            maxvalue: {{MAX_LON}}
          action:
            name: reduce obs space
- 
        # Reject all obs with QualityMarker > 3
        - filter: RejectList
          apply at iterations: 0,1
@@ -89,7 +87,6 @@
          maxvalue: 120000.0
          action:
            name: reduce obs space
- 
        # Observation Prior Filters (QC)
        obs prior filters:
        # ----------------------------------------------
@@ -104,7 +101,6 @@
            flag all filter variables if any test variable is out of bounds: true
            minvalue: 0.0
            maxvalue: 0.5
- 
        # Initial Error Assignments for SFC Observations
        # 181
        - filter: Perform Action
@@ -128,7 +124,6 @@
          - name: InputObsError/stationPressure
            type: float
            source variable: ObsError/stationPressure
- 
        # Create PreUseFlag Group variable (usage in GSI read_prepbufr)
        # Initialize
        - filter: Variable Assignment
@@ -136,7 +131,6 @@
          - name: PreUseFlag/stationPressure
            type: int
            source variable: QualityMarker/stationPressure
- 
        - filter: Variable Assignment
          where:
          - variable:
@@ -154,7 +148,6 @@
          assignments:
          - name: PreUseFlag/stationPressure
            value: 100
- 
        - filter: Variable Assignment
          where:
          - variable:
@@ -167,7 +160,6 @@
          assignments:
          - name: PreUseFlag/stationPressure
            value: 100
- 
        - filter: Variable Assignment
          where:
          - variable:
@@ -176,7 +168,6 @@
          assignments:
          - name: PreUseFlag/stationPressure
            value: 100
- 
        - filter: Variable Assignment
          where:
          - variable:
@@ -185,7 +176,6 @@
          assignments:
          - name: PreUseFlag/stationPressure
            value: 101
- 
        # Inflate obs error based on obs type
        - filter: Perform Action
          filter variables:
@@ -196,7 +186,6 @@
          where:
          - variable: QualityMarker/stationPressure
            is_in: 3, 7
- 
        # Observation Post Filters (QC)
        # -------------------------------
        obs post filters:
@@ -210,7 +199,6 @@
              options:
                use_air_pressure: false
                variable: stationPressure
- 
        # Calculate obs error inflation factors for large discrepencies between model and observations
        - filter: Variable Assignment
          assignments:
@@ -222,7 +210,6 @@
                geovar_sfc_geomz: height_above_mean_sea_level_at_surface
                geovar_temp: air_temperature
                geovar_geomz: geopotential_height
- 
        # Inflate surface pressure observation based on discrepancies between model and observations due to terrian
        - filter: Perform Action
          filter variables:
@@ -231,7 +218,6 @@
            name: inflate error
            inflation variable:
              name: ObsErrorFactorSfcPressure/stationPressure
- 
        - filter: Variable Assignment
          assignments:
          - name: DerivedMetaData/Innovation
@@ -243,7 +229,6 @@
                - name: ObsValue/stationPressure
                - name: HofX/stationPressure
                coefs: [1, -1]
- 
        - filter: Variable Assignment
          assignments:
          - name: DerivedMetaData/ObsErrorBoundSfcPressure1
@@ -255,7 +240,6 @@
                obserr_bound_min: 100
                obserr_bound_max: 300
                obserr_bound_factor: 4.0
- 
        - filter: Background Check
          filter variables:
          - name: stationPressure
@@ -268,7 +252,6 @@
          - name: DerivedMetaData/ObsErrorBoundSfcPressure1
          action:
            name: reject
- 
        - filter: Variable Assignment
          assignments:
          - name: DerivedMetaData/ObsErrorBoundSfcPressure2
@@ -280,7 +263,6 @@
                obserr_bound_min: 100
                obserr_bound_max: 300
                obserr_bound_factor: 2.8
- 
        - filter: Background Check
          filter variables:
          - name: stationPressure
@@ -293,7 +275,6 @@
          - name: DerivedMetaData/ObsErrorBoundSfcPressure2
          action:
            name: reject
- 
        # Inflate obs error based on duplicate check
        - filter: Perform Action
          filter variables:
@@ -302,7 +283,6 @@
            name: inflate error
            inflation variable:
              name: ObsErrorFactorDuplicateCheck/stationPressure
- 
        # Reject data based on PreUseFlag (usage in GSI)
        - filter: Perform Action
          filter variables:
@@ -315,3 +295,6 @@
          action:
            name: reject
          # End of Filters
+       obs localizations:
+       - localization method: Horizontal Gaspari-Cohn
+         lengthscale: 450e3

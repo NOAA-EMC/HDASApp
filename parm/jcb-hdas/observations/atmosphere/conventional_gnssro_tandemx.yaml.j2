@@ -1,9 +1,9 @@
      - obs space:
-         name: gnssro_sentinel6
+         name: gnssro_tandemx
          obsdatain:
            engine:
              type: H5File
-             obsfile: obs/hafs.t{{HH}}z.gnssro_sentinel6.nc
+             obsfile: obs/hafs.t{{HH}}z.conventional_gnssro_tandemx.nc
              missing file action: warn
            obsgrouping:
              group variables: ['sequenceNumber']
@@ -12,7 +12,7 @@
          obsdataout:
            engine:
              type: H5File
-             obsfile: hofx/diag_gnssro_sentinel6_t{{HH}}z.nc
+             obsfile: hofx/diag_conventional_gnssro_tandemx_t{{HH}}z.nc
              allow overwrite: true
          io pool:
            max pool size: {{TOTAL_TASKS}}

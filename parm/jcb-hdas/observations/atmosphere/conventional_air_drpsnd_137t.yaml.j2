@@ -1,20 +1,22 @@
      - obs space:
          name: drpsnd_airTemperature_137 
+         distribution:
+           name: "{{distribution_type}}"
+           halo size: 500e3
          obsdatain:
            engine:
              type: H5File
-             obsfile: obs/hafs.t{{HH}}z.conventional_air_drpsnd.nc
+             obsfile: obs/hafs.t{{HH}}z.conventional_air_drpsnd_137t.nc
              missing file action: "warn"
          obsdataout:
            engine:
              type: H5File
-             obsfile: hofx/diag_conventional_air_drpsndt_t{{HH}}z.nc
+             obsfile: hofx/diag_conventional_air_drpsnd_137t_t{{HH}}z.nc
              allow overwrite: true
          io pool:
-           max pool size: {{TOTAL_TASKS}}
+           max pool size: {{POOL_SIZE}}
          observed variables: [airTemperature]
          simulated variables: [airTemperature]
- 
        obs operator:
          name: Composite
          components:
@@ -25,10 +27,8 @@
            interpolation method: log-linear
            variables: 
            - name: airTemperature
- 
        obs error:
          covariance model: diagonal
- 
        obs pre filters:  
        - filter: Domain Check
          apply at iterations: 0,1
@@ -39,7 +39,6 @@
            maxvalue: {{MAX_LAT}}
          action:
            name: reduce obs space
- 
        - filter: Domain Check
          apply at iterations: 0,1
          where:
@@ -49,7 +48,6 @@
            maxvalue: {{MAX_LON}}
          action:
            name: reduce obs space
- 
        # Reject all obs with QualityMarker > 3
        - filter: RejectList
          apply at iterations: 0,1
@@ -66,7 +64,6 @@
          where operator: or
          action:
            name: reduce obs space 
- 
        # Time window filter
        - filter: Domain Check
          apply at iterations: 0,1
@@ -77,7 +74,6 @@
              maxvalue:  10800
          action:
            name: reduce obs space
- 
        obs prior filters:  
        # Regional Domain Check
        - filter: Bounds Check
@@ -89,7 +85,6 @@
            maxvalue: 0.5
          action:
            name: reject
- 
        # Initial errror assignment
        - filter: Perform Action
          filter variables:
@@ -100,7 +95,6 @@
          action:
            name: assign error
            error parameter: 0.7
- 
        ## error inflation if observation QM is 3 or 7 (read_fl_hdob.f90)
        - filter: Perform Action
          filter variables:
@@ -111,7 +105,6 @@
          action:
            name: inflate error
            inflation factor: 1.2
- 
        ## error inflation if observation pressure < 100 hPa (read_fl_hdob.f90)
        - filter: Perform Action
          filter variables:
@@ -122,7 +115,6 @@
          action:
            name: inflate error
            inflation factor: 1.2
- 
        # Bounds Check
        - filter: Bounds Check
          apply at iterations: 0,1
@@ -130,8 +122,6 @@
          - name: airTemperature
          minvalue: 170
          maxvalue: 320
- 
- 
        # Observation Post Filters (QC)
        # -------------------------------
        obs post filters:
@@ -146,7 +136,6 @@
              options:
                variables: [ObsValue/airTemperature, HofX/airTemperature]
                coefs: [1.0, -1.0]
- 
        # step2: assign dynamic obs error
        - filter: Perform Action
          filter variables:
@@ -160,7 +149,6 @@
                absolute value: [true]     
                total coefficient: 0.7
                intercept: 0.2
- 
        ##  error inflation based on pressure check (setupt.f90)
        - filter: Perform Action
          filter variables:
@@ -175,7 +163,6 @@
              options:
                variable: airTemperature
                inflation factor: 8.0
- 
        # Create temporary ObsErrorData
        - filter: Variable Assignment
          apply at iterations: 0,1
@@ -187,7 +174,6 @@
              options:
                variables:
                - name: ObsErrorData/airTemperature
- 
        # Set ObsError set "error parameter" if < "max value"
        - filter: Perform Action
          apply at iterations: 0,1
@@ -203,7 +189,6 @@
          - variable:
              name: ObsErrorData/airTemperature
            value: is_valid
- 
        # Set ObsError set "error parameter" if > "min value"
        - filter: Perform Action
          apply at iterations: 0,1
@@ -219,7 +204,6 @@
          - variable:
              name: ObsErrorData/airTemperature
            value: is_valid
- 
        ## Gross Error Check
        - filter: Background Check
          apply at iterations: 0,1
@@ -231,7 +215,6 @@
          where:
          - variable: QualityMarker/airTemperature
            is_not_in: 3
- 
        ## Gross Error Check: cgross*0.7 if QualityMarker=3
        - filter: Background Check
          apply at iterations: 0,1
@@ -243,7 +226,6 @@
          where:
          - variable: QualityMarker/airTemperature
            is_in: 3
- 
        # Re-assign err ObsErrorData <--- TempObsErrorData after gross error check.
        - filter: Perform Action
          apply at iterations: 0,1
@@ -256,3 +238,6 @@
          - variable:
              name: TempObsErrorData/airTemperature
            value: is_valid
+       obs localizations:
+       - localization method: Horizontal Gaspari-Cohn
+         lengthscale: 450e3

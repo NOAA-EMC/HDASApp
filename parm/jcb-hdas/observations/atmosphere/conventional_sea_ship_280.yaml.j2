@@ -1,9 +1,12 @@
      - obs space:
          name: sfcshp_winds_280
+         distribution:
+           name: "{{distribution_type}}"
+           halo size: 500e3
          obsdatain:
            engine:
              type: H5File
-             obsfile: obs/hafs.t{{HH}}z.conventional_sea_ship.nc
+             obsfile: obs/hafs.t{{HH}}z.conventional_sea_ship_280.nc
              missing file action: "warn"
            obsgrouping:
              group variables: ["stationIdentification"]
@@ -12,13 +15,12 @@
          obsdataout:
            engine:
              type: H5File
-             obsfile: hofx/diag_conventional_sea_shipw_t{{HH}}z.nc
+             obsfile: hofx/diag_conventional_sea_ship_280_t{{HH}}z.nc
              allow overwrite: true
          io pool:
-           max pool size: {{TOTAL_TASKS}}
+           max pool size: {{POOL_SIZE}}
          observed variables: [windEastward, windNorthward]
          simulated variables: [windEastward, windNorthward]
- 
        obs operator:
          name: VertInterp
          hofx_scaling: true
@@ -31,10 +33,8 @@
          variables:
          - name: windEastward
          - name: windNorthward
- 
        linear obs operator:
          name: VertInterp
- 
        obs error:
          covariance model: diagonal
        # Observation Pre fitler for domain resize
@@ -74,7 +74,6 @@
          where operator: or
          action:
            name: reduce obs space
- 
        # Observation Prior Filters (QC)
        # initial error assignment
        obs prior filters:
@@ -87,7 +86,6 @@
          - name:  GeoVaLs/observable_domain_mask
            minvalue: 0.0
            maxvalue: 0.5
- 
        - filter: Perform Action
          filter variables:
          - name: windEastward
@@ -98,7 +96,6 @@
          action:
            name: assign error
            error parameter: 2.628
- 
        # Create PreUseFlag Group Variable (usage in GSI read_prepbufr)
        # Initialize
        - filter: Variable Assignment
@@ -168,7 +165,6 @@
          assignments:
          - name: PreUseFlag/windEastward
            value: 102
- 
        # Error inflation based on pressure check (setupw.f90)
        # WindEastward
        - filter: Perform Action
@@ -223,7 +219,6 @@
          where:
          - variable: QualityMarker/windNorthward
            is_in: 3, 7
- 
        # Error inflation when observation pressure < 50 hPa (read_prepbufr.f90)
        - filter: Perform Action
          filter variables:
@@ -245,7 +240,6 @@
          minvalue: 0.0
          action:
            name: reject
- 
        # Bounds Check (ObsValue)
        - filter: Bounds Check
          filter variables:
@@ -255,7 +249,6 @@
          maxvalue: 130
          action:
            name: reject
- 
        # Observation Post Filters (QC)
        # -------------------------------
        obs post filters:
@@ -278,7 +271,6 @@
              options:
                use_air_pressure: yes
                variable: windNorthward
- 
        # Gross Error Check (windEastward)
        - filter: Background Check
          apply at iterations: 0,1
@@ -297,7 +289,6 @@
            is_not_in: 3
          action:
            name: reject
- 
        # Gross Error Check (windNorthward)
        - filter: Background Check
          apply at iterations: 0,1
@@ -334,7 +325,6 @@
            is_in: 3
          action:
            name: reject
- 
        # Gross Error Check (windNorthward): cgross*0.7 if QualityMarker=3
        - filter: Background Check
          apply at iterations: 0,1
@@ -353,7 +343,6 @@
            is_in: 3
          action:
            name: reject
- 
        # Inflate obs error based on duplicate check
        - filter: Perform Action
          filter variables:
@@ -369,7 +358,6 @@
            name: inflate error
            inflation variable:
              name: ObsErrorFactorDuplicateCheck/windNorthward
- 
        # Reject data based on PreUseFlag (usage in GSI)
        - filter: Perform Action
          filter variables:
@@ -382,6 +370,7 @@
          where operator: or
          action:
            name: reject
- 
          # End of Filters
- 
+       obs localizations:
+       - localization method: Horizontal Gaspari-Cohn
+         lengthscale: 450e3

@@ -1,9 +1,9 @@
      - obs space:
-         name: gnssro_metop
+         name: gnssro_terrasarx
          obsdatain:
            engine:
              type: H5File
-             obsfile: obs/hafs.t{{HH}}z.gnssro_metop.nc
+             obsfile: obs/hafs.t{{HH}}z.conventional_gnssro_terrasarx.nc
              missing file action: warn
            obsgrouping:
              group variables: ['sequenceNumber']
@@ -12,7 +12,7 @@
          obsdataout:
            engine:
              type: H5File
-             obsfile: hofx/diag_gnssro_metop_t{{HH}}z.nc
+             obsfile: hofx/diag_conventional_gnssro_terrasarx_t{{HH}}z.nc
              allow overwrite: true
          io pool:
            max pool size: {{TOTAL_TASKS}}
@@ -56,25 +56,25 @@
          filter variables:  
          - name: bendingAngle 
          flags:
-         - name: qfroCheckReject
+         - name: pccfCheckReject
            initial value: false 
            force reinitialization: true
        
-       # Step 0-B: qfro Check  - good: 0, reject: 1
+       # Step 0-B: pccf Check for CDACC data  - good: 0.1-100, reject: 0
        - filter: Bounds Check
          filter variables:
          - name: bendingAngle
          where:
          - variable:
              name: MetaData/satelliteIdentifier
-           is_in: 3-5,421,440,821
+           is_in: 265-269,750-755,44,786,820,825
          test variables:
-         - name: MetaData/qualityFlags
-         minvalue: -0.1
-         maxvalue: 0.9
+         - name: MetaData/pccf
+         minvalue: 0.1
+         maxvalue: 100.1
          actions:
          - name: set
-           flag: qfroCheckReject
+           flag: pccfCheckReject
          - name: reject
  
        #1. gpstop
@@ -88,21 +88,7 @@
            maxvalue: 35000.1
          action:
            name: reject
-
-      #2. metop below 8 km
-      - filter: Bounds Check
-        filter variables:
-        - name: bendingAngle
-        where:
-        - variable:
-            name: MetaData/satelliteIdentifier
-          is_in: 3-5
-        test variables:
-        - name: MetaData/impactHeightRO
-        minvalue: 8000.1
-        action:
-          name: reject
- 
+     
        # Observation Post Filters (QC)
        # ----------------------------------------
        obs post filters:

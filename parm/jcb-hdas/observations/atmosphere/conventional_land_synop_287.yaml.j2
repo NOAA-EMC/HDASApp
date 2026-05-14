@@ -1,9 +1,12 @@
      - obs space:
          name: adpsfc_winds_287
+         distribution:
+           name: "{{distribution_type}}"
+           halo size: 500e3
          obsdatain:
            engine:
              type: H5File
-             obsfile: obs/hafs.t{{HH}}z.conventional_land_synop.nc
+             obsfile: obs/hafs.t{{HH}}z.conventional_land_synop_287.nc
              missing file action: "warn"
            obsgrouping:
              group variables: ["stationIdentification"]
@@ -12,13 +15,12 @@
          obsdataout:
            engine:
              type: H5File
-             obsfile: hofx/diag_conventional_land_synopw287_t{{HH}}z.nc
+             obsfile: hofx/diag_conventional_land_synop_287_t{{HH}}z.nc
              allow overwrite: true
          io pool:
-           max pool size: {{TOTAL_TASKS}}
+           max pool size: {{POOL_SIZE}}
          observed variables: [windEastward, windNorthward]
          simulated variables: [windEastward, windNorthward]
- 
        obs operator:
          name: VertInterp
          hofx_scaling: true
@@ -31,10 +33,8 @@
          variables:
          - name: windEastward
          - name: windNorthward
- 
        linear obs operator:
          name: VertInterp
- 
        obs error:
          covariance model: diagonal
        # Observation Pre fitler for domain resize
@@ -74,7 +74,6 @@
          where operator: or
          action:
            name: reduce obs space
- 
        # Observation Prior Filters (QC)
        # initial error assignment
        obs prior filters:
@@ -94,7 +93,6 @@
                  name: MetaData/pressure
                xvals: [110000, 105000, 100000, 95000, 90000, 85000, 80000, 75000, 70000, 65000, 60000, 55000, 50000, 45000, 40000, 35000, 30000, 25000, 20000, 15000, 10000, 7500, 5000, 4000, 3000, 2000, 1000, 500, 400, 300, 200, 100, 0]
                errors: [1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162, 1.9162]
- 
        # Online domain check
        - filter: Bounds Check
          filter variables:
@@ -133,7 +131,6 @@
          assignments:
          - name: PreUseFlag/windNorthward
            value: 0
- 
        - filter: Variable Assignment
          where:
          - variable:
@@ -150,7 +147,6 @@
          assignments:
          - name: PreUseFlag/windNorthward
            value: 100
- 
        - filter: Variable Assignment
          where:
          - variable:
@@ -242,7 +238,6 @@
          minvalue: 0.0
          action:
            name: reject
- 
        # Bounds Check (ObsValue)
        - filter: Bounds Check
          filter variables:
@@ -252,7 +247,6 @@
          maxvalue: 130
          action:
            name: reject
- 
        # Observation Post Filters (QC)
        # -------------------------------
        obs post filters:
@@ -275,7 +269,6 @@
              options:
                use_air_pressure: yes
                variable: windNorthward
- 
        # Gross Error Check (windEastward)
        - filter: Background Check
          apply at iterations: 0,1
@@ -294,7 +287,6 @@
            is_not_in: 3
          action:
            name: reject
- 
        # Gross Error Check (windNorthward)
        - filter: Background Check
          apply at iterations: 0,1
@@ -331,7 +323,6 @@
            is_in: 3
          action:
            name: reject
- 
        # Gross Error Check (windNorthward): cgross*0.7 if QualityMarker=3
        - filter: Background Check
          apply at iterations: 0,1
@@ -350,7 +341,6 @@
            is_in: 3
          action:
            name: reject
- 
        # Inflate obs error based on duplicate check
        - filter: Perform Action
          filter variables:
@@ -366,7 +356,6 @@
            name: inflate error
            inflation variable:
              name: ObsErrorFactorDuplicateCheck/windNorthward
- 
        # Reject data based on PreUseFlag (usage in GSI)
        - filter: Perform Action
          filter variables:
@@ -388,5 +377,7 @@
          where operator: or
          action:
            name: reject
- 
          # End of Filters
+       obs localizations:
+       - localization method: Horizontal Gaspari-Cohn
+         lengthscale: 450e3

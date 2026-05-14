@@ -1,0 +1,47 @@
+# Set the model component to be used in later configuration
+{% set model_component = model_component|default('model_component') %}
+
+time window:
+  begin: '{{window_begin}}'
+  length: '{{window_length}}'
+  bound to include: '{{ bound_to_include | default("begin", true) }}'
+
+geometry:
+{% filter indent(width=2) %}
+{% set geometry_background_file = geometry_background_file|default(model_component ~ 'ens_geometry_background', true) ~ '.yaml.j2' %}
+{% include geometry_background_file %}
+{% endfilter %}
+
+increment variables: {{analysis_variables}}
+
+background:
+{% filter indent(width=2) %}
+{% set background_file = background_file|default(model_component ~ 'background_hofx3d', true) ~ '.yaml.j2' %}
+{% include background_file %}
+{% endfilter %}
+
+observations:
+  observers:
+{% for observation_from_jcb in observations %}
+{% if use_observer(observation_from_jcb) %}
+{% filter indent(width=2) %}
+{% include observation_from_jcb + '.yaml.j2' %}
+{% endfilter %}
+{% endif %}
+{% endfor %}
+
+{% if solver_file is defined %}
+local ensemble DA:
+{% filter indent(width=2) %}
+{% set solver_file = solver_file ~ '.yaml.j2' %}
+{% include solver_file %}
+{% endfilter %}
+{% endif %}
+
+{% if driver_file is defined %}
+driver:
+{% filter indent(width=2) %}
+{% set driver_file = driver_file ~ '.yaml.j2' %}
+{% include driver_file %}
+{% endfilter %}
+{% endif %}

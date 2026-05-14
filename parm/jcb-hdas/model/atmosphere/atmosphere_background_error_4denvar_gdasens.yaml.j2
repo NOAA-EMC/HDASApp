@@ -1,0 +1,69 @@
+covariance model: ensemble
+members from template:
+  template:
+    states:
+    - datetime: "{{ atmosphere_background_time_iso }}"
+      filetype: structured grid
+      gridtype: gaussian
+      akbk: {{atmosphere_background_path}}/{{atmosphere_akbk_file}}
+      mode: read
+      lon_min: {{MIN_LON}}
+      lon_max: {{MAX_LON}}
+      lat_min: {{MIN_LAT}}
+      lat_max: {{MAX_LAT}}
+      input filename: ensemble_data/mem%mem%/gdas.atmf003
+      state variables: {{state_variables_B}}
+      field io names: &field_io_B
+        eastward_wind: ugrd
+        northward_wind: vgrd
+        upward_air_velocity: dzdt
+        air_temperature: tmp
+        air_pressure_at_surface: pressfc
+        water_vapor_mixing_ratio_wrt_moist_air: spfh
+        cloud_liquid_ice: icmr
+        cloud_liquid_water: clwmr
+        ozone_mass_mixing_ratio: o3mr
+        geopotential_height_times_gravity_at_surface: hgtsfc
+        air_pressure_thickness: dpres
+        layer_thickness: delz
+    - datetime: "{{ atmosphere_background_time_iso6 }}"
+      filetype: structured grid
+      gridtype: gaussian
+      akbk: {{atmosphere_background_path}}/{{atmosphere_akbk_file}}
+      mode: read
+      lon_min: {{MIN_LON}}
+      lon_max: {{MAX_LON}}
+      lat_min: {{MIN_LAT}}
+      lat_max: {{MAX_LAT}}
+      input filename: ensemble_data/mem%mem%/gdas.atmf006
+      state variables: {{state_variables_B}}
+      field io names: *field_io_B
+    - datetime: "{{ atmosphere_background_time_iso9 }}"
+      filetype: structured grid
+      gridtype: gaussian
+      akbk: {{atmosphere_background_path}}/{{atmosphere_akbk_file}}
+      mode: read
+      lon_min: {{MIN_LON}}
+      lon_max: {{MAX_LON}}
+      lat_min: {{MIN_LAT}}
+      lat_max: {{MAX_LAT}}
+      input filename: ensemble_data/mem%mem%/gdas.atmf009
+      state variables: {{state_variables_B}}
+      field io names: *field_io_B
+  pattern: "%mem%"
+  nmembers: {{atmosphere_number_ensemble_members}}
+  zero padding: 3
+localization:
+  localization method: SABER
+  saber central block:
+    saber block name: BUMP_NICAS
+    active variables: {{active_variables}}
+    read:
+      io:
+        files prefix: bump/fv3jedi_bumpparameters_nicas_hafs_atm
+        alias:
+        - in code: common
+          in file: common_250km
+      drivers:
+        multivariate strategy: duplicated
+        read local nicas: true

@@ -1,9 +1,12 @@
      - obs space:
          name: adpupa_specifichumidity_120
+         distribution:
+           name: "{{distribution_type}}"
+           halo size: 500e3
          obsdatain:
            engine:
              type: H5File
-             obsfile: obs/hafs.t{{HH}}z.conventional_air_raob.nc
+             obsfile: obs/hafs.t{{HH}}z.conventional_air_raob_120q.nc
              missing file action: "warn"
            obsgrouping:
              group variables: ["stationIdentification"]
@@ -12,10 +15,10 @@
          obsdataout:
            engine:
              type: H5File
-             obsfile: hofx/diag_conventional_air_raobq_t{{HH}}z.nc
+             obsfile: hofx/diag_conventional_air_raob_120q_t{{HH}}z.nc
              allow overwrite: true
          io pool:
-           max pool size: {{TOTAL_TASKS}}
+           max pool size: {{POOL_SIZE}}
          observed variables: [specificHumidity]
          simulated variables: [specificHumidity]
        obs operator:
@@ -28,10 +31,8 @@
            interpolation method: log-linear
            variables:
            - name: specificHumidity
- 
        obs error:
          covariance model: diagonal
- 
        # Observation Pre fitler for domain resize
        obs pre filters:
        # --------------------------
@@ -82,7 +83,6 @@
              maxvalue:  10800
          action:
            name: reduce obs space
- 
        # Observation Prior Filters (QC)
        obs prior filters:
        # Regional Domain Check
@@ -94,7 +94,6 @@
            flag all filter variables if any test variable is out of bounds: true
            minvalue: 0.0
            maxvalue: 0.5
- 
        # Initial errror assignment
        - filter: Perform Action
          filter variables:
@@ -135,7 +134,6 @@
          assignments:
          - name: PreUseFlag/specificHumidity
            value: 100
- 
        - filter: Variable Assignment
          where:
          - variable:
@@ -144,7 +142,6 @@
          assignments:
          - name: PreUseFlag/specificHumidity
            value: 101
- 
        ## error inflation if observation QM is 3 or 7 (read_prepbufr.f90)
        - filter: Perform Action
          filter variables:
@@ -156,7 +153,6 @@
          action:
            name: inflate error
            inflation factor: 1.2
- 
        # Error inflation based on pressure check (setupq.f90)
        - filter: Perform Action
          filter variables:
@@ -172,7 +168,6 @@
                variable: specificHumidity
                inflation factor: 8.0
                request_saturation_specific_humidity_geovals: true
- 
        # Error inflation based on errormod (qcmod.f90)
        - filter: Perform Action
          filter variables:
@@ -187,14 +182,12 @@
              options:
                inflate variables: [specificHumidity]
                pressure: MetaData/pressure
- 
        - filter: Bounds Check
          apply at iterations: 0,1
          filter variables:
          - name: specificHumidity
          minvalue: 0.0
          maxvalue: 1.0
- 
        # Observation Post Filters (QC)
        # -------------------------------
        obs post filters:
@@ -208,7 +201,6 @@
              options:
                use_air_pressure: yes
                variable: specificHumidity
- 
        # Create temporary ObsErrorData
        - filter: Variable Assignment
          apply at iterations: 0,1
@@ -250,7 +242,6 @@
          - variable:
              name: ObsErrorData/specificHumidity
            value: is_valid
- 
        # Gross Error Check
        - filter: Background Check
          apply at iterations: 0,1
@@ -275,7 +266,6 @@
          - variable: ObsType/specificHumidity
          - variable: QualityMarker/specificHumidity
            is_in: 3
- 
        # Re-assign err ObsErrorData <--- TempObsErrorData after gross error check.
        - filter: Perform Action
          apply at iterations: 0,1
@@ -288,7 +278,6 @@
          - variable:
              name: TempObsErrorData/specificHumidity
            value: is_valid
- 
        # Inflate obs error based on duplicate check
        - filter: Perform Action
          filter variables:
@@ -297,5 +286,7 @@
            name: inflate error
            inflation variable:
              name: ObsErrorFactorDuplicateCheck/specificHumidity
- 
        # End of filter
+       obs localizations:
+       - localization method: Horizontal Gaspari-Cohn
+         lengthscale: 450e3

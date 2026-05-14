@@ -1,9 +1,9 @@
      - obs space:
-         name: gnssro_cosmic2
+         name: gnssro_kompsat5
          obsdatain:
            engine:
              type: H5File
-             obsfile: obs/hafs.t{{HH}}z.gnssro_cosmic2.nc
+             obsfile: obs/hafs.t{{HH}}z.conventional_gnssro_kompsat5.nc
              missing file action: warn
            obsgrouping:
              group variables: ['sequenceNumber']
@@ -12,7 +12,7 @@
          obsdataout:
            engine:
              type: H5File
-             obsfile: hofx/diag_gnssro_cosmic2_t{{HH}}z.nc
+             obsfile: hofx/diag_conventional_gnssro_kompsat5_t{{HH}}z.nc
              allow overwrite: true
          io pool:
            max pool size: {{TOTAL_TASKS}}

@@ -3,7 +3,7 @@
 supported_algorithms:
 - fv3jedi_4denvar
 - fv3jedi_3denvar
-#- hofx4d
+#- hofx3d
 #- local_ensemble_da
 # Local algorithms
 #- fv3jedi_fv3inc_lgetkf
@@ -13,6 +13,9 @@ supported_algorithms:
 #algorithm: fv3jedi_fv3inc_variational
 #algorithm: 3dvar
 algorithm: fv3jedi__ALGORITHM_
+
+#EnKF solver
+solver_file: atmosphere_solver_getkf
 
 # Search path for model and obs for JCB (relative for the submodule, or can be absolute)
 # --------------------------------------------------------------------------------------
@@ -25,10 +28,11 @@ app_path_observation_chronicle: hdas/observation_chronicle/atmosphere
 # Places where we deviate from the generic file name of a yaml
 # ------------------------------------------------------------
 final_increment_file: atmosphere_final_increment__ALGORITHM_
+driver_file: atmosphere_driver__ALGORITHM_
 output_file: atmosphere_output__ALGORITHM_
 model_file: atmosphere_model_pseudo
 initial_condition_file: atmosphere_background
-background_error_file: atmosphere_background_error__ALGORITHM_
+background_error_file: atmosphere_background_error__ALGORITHMCOV_
 
 
 # Global analysis things
@@ -43,17 +47,17 @@ final_diagnostics_departures: oman
 analysis_variables: [eastward_wind,northward_wind,upward_air_velocity,air_temperature,air_pressure_at_surface,water_vapor_mixing_ratio_wrt_moist_air,cloud_liquid_ice,cloud_liquid_water,ozone_mass_mixing_ratio]
 active_variables: [eastward_wind,northward_wind,upward_air_velocity,air_temperature,air_pressure_at_surface,water_vapor_mixing_ratio_wrt_moist_air,cloud_liquid_ice,cloud_liquid_water,ozone_mass_mixing_ratio]
 number_of_outer_loops: 2
-distribution: RoundRobin
+distribution: _DISTRIBUTION_
+distribution_type: _DISTRIBUTION_
 
 # Testing
 # -------
-
 do_testing: false
 
 # Model things
 # ------------
 HH: '_HH_'
-TOTAL_TASKS: '_TOTAL_TASKS_'
+POOL_SIZE: '_POOL_SIZE_'
 MIN_LAT: _MIN_LAT_
 MAX_LAT: _MAX_LAT_
 MIN_LON: _MIN_LON_
@@ -73,8 +77,13 @@ atmosphere_ntiles: 1
 atmosphere_io_layout_x: 1
 atmosphere_io_layout_y: 1
 atmosphere_akbk_file: _FV3_AKBK_FILE_
+atmosphere_akbk_ens_file: _FV3_AKBK_ENS_FILE_
 gradient_norm_reduction: 1e-3
 ninner: 50
+nesttilestrnc: _NESTTILESTRNC_
+nesttilestrsfc: _NESTTILESTRSFC_
+input_hafs_ens_nml_path: _INPUT_HAFS_ENS_NML_
+input_hafs_nml_path: _INPUT_HAFS_NML_
 
 # Background
 atmosphere_background_path: bkg/
@@ -90,6 +99,7 @@ atmosphere_background_time_prefix: '_YYMODD3_._HH3_0000.'
 atmosphere_background_time_prefix6: '_YYMODD6_._HH6_0000.'
 atmosphere_background_time_prefix9: '_YYMODD9_._HH9_0000.'
 state_variables: [eastward_wind,northward_wind,upward_air_velocity,air_temperature,air_pressure_thickness,air_pressure_at_surface,layer_thickness,water_vapor_mixing_ratio_wrt_moist_air,cloud_liquid_ice,cloud_liquid_water,rain_water,snow_water,graupel,cloud_ice_number_concentration,rain_number_concentration,ozone_mass_mixing_ratio,geopotential_height_times_gravity_at_surface,slmsk,sheleg,skin_temperature_at_surface,vtype,stype,vfrac,stc,soilMoistureVolumetric,totalSnowDepth,eastward_wind_at_surface,northward_wind_at_surface,f10m]
+state_variables_B: [eastward_wind,northward_wind,upward_air_velocity,air_temperature,air_pressure_at_surface,water_vapor_mixing_ratio_wrt_moist_air,cloud_liquid_ice,cloud_liquid_water,ozone_mass_mixing_ratio]
 eastward_wind: ua
 northward_wind: va
 upward_air_velocity: W

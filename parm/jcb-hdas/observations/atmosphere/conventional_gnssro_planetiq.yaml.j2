@@ -1,9 +1,9 @@
      - obs space:
-         name: gnssro_paz
+         name: gnssro_planetiq
          obsdatain:
            engine:
              type: H5File
-             obsfile: obs/hafs.t{{HH}}z.gnssro_paz.nc
+             obsfile: obs/hafs.t{{HH}}z.conventional_gnssro_planetiq.nc
              missing file action: warn
            obsgrouping:
              group variables: ['sequenceNumber']
@@ -12,7 +12,7 @@
          obsdataout:
            engine:
              type: H5File
-             obsfile: hofx/diag_gnssro_paz_t{{HH}}z.nc
+             obsfile: hofx/diag_conventional_gnssro_planetiq_t{{HH}}z.nc
              allow overwrite: true
          io pool:
            max pool size: {{TOTAL_TASKS}}
@@ -77,15 +77,17 @@
            flag: pccfCheckReject
          - name: reject
  
-       #1. gpstop
-       - filter: Domain Check
+       #1. commgpstop
+       - filter: Bounds Check
          filter variables:
          - name: bendingAngle
          where:
          - variable:
-             name: MetaData/impactHeightRO
-           minvalue: 0. 
-           maxvalue: 35000.1
+             name: MetaData/satelliteIdentifier
+           is_in: 265,266,267,268,269
+         test variables:
+         -name: MetaData/impactHeightRO
+         maxvalue: 35000.1
          action:
            name: reject
      

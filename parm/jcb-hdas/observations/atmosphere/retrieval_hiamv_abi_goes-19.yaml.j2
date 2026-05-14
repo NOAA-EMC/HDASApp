@@ -1,5 +1,8 @@
      - obs space:
          name: satwhr_g19
+         distribution:
+           name: "{{distribution_type}}"
+           halo size: 500e3
          obsdatain:
            engine:
              type: H5File
@@ -8,23 +11,20 @@
          obsdataout:
            engine:
              type: H5File
-             obsfile: hofx/diag_retrieval_hiamv_abi_g19_t{{HH}}z.nc
+             obsfile: hofx/diag_retrieval_hiamv_abi_goes-19_t{{HH}}z.nc
          io pool:
-           max pool size: {{TOTAL_TASKS}}
+           max pool size: {{POOL_SIZE}}
          simulated variables: [windEastward, windNorthward]
- 
        # Observation Operator
        # --------------------
        obs operator:
          name: VertInterp
          hofx scaling field: SurfaceWindScalingPressure
          hofx scaling field group: DerivedVariables
- 
        # Linear Observation Operator
        # ---------------------------
        linear obs operator:
          name: VertInterp
- 
        # Observation Pre Filters for reduce obs space
        # ------------------------------
        obs pre filters:
@@ -37,7 +37,6 @@
            maxvalue: {{MAX_LAT}}
          action:
            name: reduce obs space
- 
        - filter: Domain Check
          apply at iterations: 0,1
          where:
@@ -47,7 +46,6 @@
            maxvalue: {{MAX_LON}}
          action:
            name: reduce obs space
- 
        # Observation Prior Filters (QC)
        # ------------------------------
        obs prior filters:
@@ -60,13 +58,11 @@
            flag all filter variables if any test variable is out of bounds: true
            minvalue: 0.0
            maxvalue: 0.5
- 
        # Apply variable changes needed for wind scaling
        # For wind observations with pressure provided
        - filter: Variable Transforms
          Transform: SurfaceWindScalingPressure
          SkipWhenNoObs: false
- 
        # Observation Post Filters (QC)
        #  -----------------------------
        obs post filters:
@@ -101,7 +97,6 @@
          action:
            name: inflate error
            inflation factor: 0.5
- 
        # sanity-check criteria
        # Observation Range Sanity Check
        # NOT EXPLICITLY CLEARED: No obs in this range in file, so 0 Bounds Check rejects (which is correct) but essentially untested
@@ -113,7 +108,6 @@
          maxvalue: 130.
          action:
            name: reject
- 
        # Velocity Sanity Check
        # NOT EXPLICITLY CLEARED: No obs in this range in file, so 0 Bounds Check rejects (which is correct) but essentially untested
        - filter: Bounds Check
@@ -125,7 +119,6 @@
          maxvalue: 130.
          action:
            name: reject
- 
        # GSI read routine QC (part-1) NOTE: otype 241 has all the zenith angle 61.23
        # Exclude data with satellite zenith angle > 68 for all types --- obs tossed without passing to setup routine
        - filter: Bounds Check
@@ -137,7 +130,6 @@
          maxvalue: 68.
          action:
            name: reject
- 
        # GSI read routine QC (part-2)
        # Reject obs with qiWithoutForecast < 85. (also > 100., which is missing data)
        - filter: Bounds Check
@@ -150,7 +142,6 @@
          maxvalue: 100.
          action:
            name: reject
- 
        # Reject obs with pressure < 12500 pa --- obs tosed without passing to setup routine
        - filter: Bounds Check
          filter variables:
@@ -164,7 +155,6 @@
          minvalue: 12500.
          action:
            name: reject
- 
        # Exclude data over non-water surface type where latitude > 20N for Type 240 (IRSW) and Type 245 (IRLW)  --- obs tossed and not passed to setup routine
        # Notes: This check was missing, so added (eliu)
        #        Replace land_type_index_NPOSS with water_area_fraction (eliu)
@@ -182,7 +172,6 @@
          minvalue: 0.99
          action:
            name: reject
- 
        # Reject obs with pct1 (Coeff. of Var.) outside of 0.04–0.5, Type [240,241,245,246,251] ONLY
        - filter: Bounds Check
          filter variables:
@@ -199,7 +188,6 @@
          maxvalue: 0.5
          action:
            name: reject
- 
        # NESDIS obs are also subject to the experr_norm test defined as:
        #
        # if (10. - 0.1*(expectedError))/(ob_speed)>0.9, or ob_speed<0.1, reject, applies to NESDIS winds
@@ -218,7 +206,6 @@
          maxvalue: 0.9
          action:
            name: reject
- 
        # GSI setupw routine QC
        # Reject any ob Type [240–260] when pressure greater than 950 mb.
        # CLEARED: minvalue/maxvalue are >=/<=, not >/<, so editing range by 1 Pa
@@ -234,7 +221,6 @@
          maxvalue: 95001.
          action:
            name: reject
- 
        # GOES IR (241) reject when pressure between 399 and 601 mb.
        #   # CLEARED: minvalue/maxvalue are >=/<=, not >/<, so editing range by 1 Pa
        - filter: Perform Action
@@ -249,7 +235,6 @@
            is_in: 241
          action:
            name: reject
- 
        # Multiple satellite platforms, reject when pressure is more than 50 mb above tropopause.
        # CLEARED: minvalue is rejecting <, not <= as per a Perform Action, so threshold is unchanged
        # Notes (eliu): This tropopause check reject too many obs; probably due to tropopause pressure estimation
@@ -264,7 +249,6 @@
          minvalue: -5000.                   # 50 hPa above tropopause level, negative p-diff
          action:
            name: reject
- 
        # Apply thinning
        # lower troposphere
        - filter: Gaussian Thinning
@@ -288,7 +272,6 @@
            is_in: 241
          - variable: MetaData/pressure
            maxvalue: 50000.
- 
        # All satwinds must adjust errors based on ObsErrorFactorPressureCheck
        # prior to the SPDB check (i.e. the gross-error check). The gross-error
        # check uses the adjusted errors for error-bound tightening and rejection,
@@ -310,7 +293,6 @@
                surface_obs: false
                variable: windEastward
                inflation factor: 4.0
- 
        - filter: Perform Action
          filter variables:
          - name: windNorthward
@@ -326,7 +308,6 @@
                surface_obs: false
                variable: windNorthward
                inflation factor: 4.0
- 
        # All satwinds subject to a gross-error check that contains significant
        # modifiers for satwinds with a negative speed-bias. ALL wind gross-error
        # checks are currently being done by the SatWindsSPDBCheck.
@@ -348,7 +329,6 @@
              variable: windEastward
          action:
            name: reject
- 
        - filter: Background Check
          filter variables:
          - name: windNorthward
@@ -366,4 +346,6 @@
              variable: windNorthward
          action:
            name: reject
- 
+       obs localizations:
+       - localization method: Horizontal Gaspari-Cohn
+         lengthscale: 450e3

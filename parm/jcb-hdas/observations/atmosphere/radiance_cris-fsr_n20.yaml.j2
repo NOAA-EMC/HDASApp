@@ -1,5 +1,8 @@
      - obs space:
          name: CRIS FSR N20
+         distribution:
+           name: "{{distribution_type}}"
+           halo size: 500e3
          obsdatain:
            engine:
              type: H5File
@@ -10,7 +13,7 @@
              type: H5File
              obsfile: hofx/diag_radiance_cris-fsr_n20_t{{HH}}z.nc
          io pool:
-           max pool size: {{TOTAL_TASKS}}
+           max pool size: {{POOL_SIZE}}
          observed variables: [spectralRadiance]
          derived variables: [brightnessTemperature]
          simulated variables: [brightnessTemperature]
@@ -54,7 +57,6 @@
                ratio: 1.1
                ratio for small dataset: 2.0
            output file: bc/out_satbias_radiance_cris-fsr_n20_t{{HH}}z_cov.nc
-     
        # Observation Pre Filters (QC)
        # ----------------------------
        obs pre filters:
@@ -67,7 +69,6 @@
            maxvalue: {{MAX_LAT}}
          action:
            name: reduce obs space
-
        - filter: Domain Check
          apply at iterations: 0,1
          where:
@@ -77,7 +78,6 @@
            maxvalue: {{MAX_LON}}
          action:
            name: reduce obs space
-
        # Step 1: Create Derived Variables
        # Assign channel wavenumbers in m-1
        - filter: Variable Assignment
@@ -111,7 +111,6 @@
                coefs: [62.5]
                intercept: 64937.5
                use channel numbers: true
-     
        - filter: Variable Assignment
          assignments:
          - name: MetaData/sensorCentralWavenumber
@@ -134,7 +133,6 @@
                coefs: [62.5]
                intercept: 76375
                use channel numbers: true
-     
        - filter: Variable Assignment
          assignments:
          - name: MetaData/sensorCentralWavenumber
@@ -154,7 +152,6 @@
                coefs: [62.5]
                intercept: 116812.5
                use channel numbers: true
-     
        # Step 2: Transform radiance to brightness temperature
        - filter: Variable Transforms
          Transform: SatBrightnessTempFromRad
@@ -167,7 +164,6 @@
          radiance units: wavenumber
          planck1: 1.191042953e-16
          planck2: 1.4387774e-2
-     
        # Step 3: Assign observation error
        - filter: Perform Action
          filter variables:
@@ -209,7 +205,6 @@
                     1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,
                     1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,
                     1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000 ]
-     
        # Step 4: Create cloudFree variable
        - filter: Variable Assignment
          assignments:
@@ -222,7 +217,6 @@
                - name: ObsValue/cloudCoverTotal
                coefs: [-100] 
                intercept: 100 
-     
        # Step 5: Data Thinning
        - filter: Gaussian Thinning
          filter variables:
@@ -234,7 +228,6 @@
          priority_variable: DerivedMetaData/cloudFree
          action:
            name: reduce obs space
-     
        obs post filters:
        # Step 6: Wavenumber Check
        - filter: RejectList
@@ -252,7 +245,6 @@
            minvalue: 1.0e-12
          action:
            name: reject
-     
        # Step 7: Observation Error Inflation based on Wavenumber
        - filter: Perform Action
          filter variables:
@@ -265,7 +257,6 @@
              channels: *radiance_cris-fsr_n20_channels
              options:
                channels: *radiance_cris-fsr_n20_channels
-     
        # Step 8: Observation Range Sanity Check
        # Valid range: (50, 550)
        - filter: Bounds Check
@@ -276,7 +267,6 @@
          maxvalue: 549.99999
          action:
            name: reject
-     
        # Step 9: Topography Check
        - filter: Perform Action
          filter variables:
@@ -290,7 +280,6 @@
              options:
                channels: *radiance_cris-fsr_n20_channels
                sensor: cris-fsr_n20
-     
        # Step 10: Transmittance Top Check
        - filter: Perform Action
          filter variables:
@@ -303,7 +292,6 @@
              channels: *radiance_cris-fsr_n20_channels
              options:
                channels: *radiance_cris-fsr_n20_channels
-     
        # Step 11: Cloud Detection Check
        - filter: Bounds Check
          filter variables:
@@ -321,7 +309,6 @@
          maxvalue: 1.0e-12
          action:
            name: reject
-     
        # Step 12: Surface Temperature Jacobian Check over Land
        - filter: Bounds Check
          filter variables:
@@ -335,7 +322,6 @@
          - name: ObsDiag/brightness_temperature_jacobian_skin_temperature_at_surface
            channels: *radiance_cris-fsr_n20_channels
          maxvalue: 0.2
-     
        # Step 13: NSST Retrieval Check
        - filter: Bounds Check
          filter variables:
@@ -352,7 +338,6 @@
          maxvalue: 1.0e-12
          action:
            name: reject
-     
        # Step 14: Surface Jacobians Check
        - filter: Perform Action
          filter variables:
@@ -368,7 +353,6 @@
                obserr_demisf: [0.01, 0.02, 0.03, 0.02, 0.03]
                obserr_dtempf: [0.50, 2.00, 4.00, 2.00, 4.00]
                sensor: cris-fsr_n20
-     
        # Step 15: Gross check
        - filter: Background Check
          filter variables:
@@ -392,7 +376,6 @@
              error parameter vector: *radiance_cris-fsr_n20_oberr
          action:
            name: reject
-     
        # Step 16: Useflag Check
        - filter: Bounds Check
          filter variables:
@@ -407,3 +390,6 @@
          minvalue: 1.0e-12
          action:
            name: reject
+       obs localizations:
+       - localization method: Horizontal Gaspari-Cohn
+         lengthscale: 450e3

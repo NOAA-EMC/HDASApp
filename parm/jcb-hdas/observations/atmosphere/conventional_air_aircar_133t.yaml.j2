@@ -1,25 +1,26 @@
      - obs space:
          name: aircar_airTemperature_133
+         distribution:
+           name: "{{distribution_type}}"
+           halo size: 500e3
          obsdatain:
            engine:
              type: H5File
-             obsfile: obs/hafs.t{{HH}}z.conventional_air_aircar.nc
+             obsfile: obs/hafs.t{{HH}}z.conventional_air_aircar_133t.nc
              missing file action: "warn"
            obsgrouping:
              group variables: ["stationIdentification"]
              sort variable: "pressure"
              sort order: "descending"
- 
          obsdataout:
            engine:
              type: H5File
-             obsfile: hofx/diag_conventional_air_cart_t{{HH}}z.nc
+             obsfile: hofx/diag_conventional_air_aircar_133t_t{{HH}}z.nc
              allow overwrite: true
          io pool:
-           max pool size: {{TOTAL_TASKS}}
+           max pool size: {{POOL_SIZE}}
          observed variables: [airTemperature]
          simulated variables: [airTemperature]
- 
        obs operator:
          name: VertInterp
          vertical coordinate: air_pressure
@@ -28,17 +29,13 @@
          interpolation method: log-linear
          variables:
          - name: airTemperature
- 
        linear obs operator:
          name: VertInterp
- 
        obs error:
          covariance model: diagonal
- 
        obs localizations:
        - localization method: Horizontal Gasperi-Cohn
          lengthscale: 300e3
- 
        obs filters:
        # Regional Domain Check
        - filter: Bounds Check
@@ -66,7 +63,6 @@
            name: reject
          action:
            name: reduce obs space
- 
        # Time window filter
        - filter: Domain Check
          apply at iterations: 0,1
@@ -75,7 +71,6 @@
              name: MetaData/timeOffset # units: s
            minvalue: -10800
            maxvalue:  10800
- 
        # Initial errror assignment
        - filter: Perform Action
          filter variables:
@@ -92,7 +87,6 @@
                  name: MetaData/pressure
                xvals: [110000, 105000, 100000, 95000, 90000, 85000, 80000, 75000, 70000, 65000, 60000, 55000, 50000, 45000, 40000, 35000, 30000, 25000, 20000, 15000, 10000, 7500, 5000, 4000, 3000, 2000, 1000, 500, 400, 300, 200, 100, 0]
                errors: [1.4088, 1.3361, 1.2395, 1.1379, 1.0505, 0.98154, 0.92451, 0.87349, 0.82829, 0.79582, 0.77562, 0.75911, 0.7408, 0.72571, 0.72719, 0.75204, 0.80129, 0.8696, 0.93292, 0.9672, 0.9831, 0.99132, 0.99603, 0.99854, 0.99963, 0.99997, 1.0, 0.99999, 0.99995, 0.99985, 0.99958, 0.99914, 0.99869]
- 
        ##  error inflation based on pressure check (setupt.f90)
        - filter: Perform Action
          filter variables:
@@ -107,7 +101,6 @@
              options:
                variable: airTemperature
                inflation factor: 8.0
- 
        # Error inflation when QualityMarker == 3 (read_prepbufr.f90)
        - filter: Perform Action
          filter variables:
@@ -128,7 +121,6 @@
          where:
          - variable: MetaData/pressure
            maxvalue: 10000.0
- 
        # Bounds Check (ObsError)
        - filter: Bounds Check
          filter variables:
@@ -136,7 +128,6 @@
          test variables:
          - name: ObsErrorData/airTemperature
          minvalue: 0.0
- 
        # Bounds Check (ObsValue)
        - filter: Bounds Check
          apply at iterations: 0,1
@@ -146,7 +137,6 @@
          maxvalue: 400
          #action:
          #  name: reduce obs space
- 
        # Create temporary ObsErrorData
        - filter: Variable Assignment
          apply at iterations: 0,1
@@ -191,7 +181,6 @@
              name: ObsErrorData/airTemperature
            value: is_valid
          defer to post: true
- 
        # Gross Error Check
        - filter: Background Check
          apply at iterations: 0,1
@@ -218,7 +207,6 @@
          - variable: QualityMarker/airTemperature
            is_in: 3
          defer to post: true
- 
        # Re-assign err ObsErrorData <--- TempObsErrorData after gross error check.
        - filter: Perform Action
          apply at iterations: 0,1
@@ -232,3 +220,6 @@
              name: TempObsErrorData/airTemperature
            value: is_valid
          defer to post: true
+       obs localizations:
+       - localization method: Horizontal Gaspari-Cohn
+         lengthscale: 450e3

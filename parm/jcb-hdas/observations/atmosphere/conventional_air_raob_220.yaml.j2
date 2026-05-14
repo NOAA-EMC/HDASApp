@@ -1,9 +1,12 @@
      - obs space:
          name: adpupa_winds_220
+         distribution:
+           name: "{{distribution_type}}"
+           halo size: 500e3
          obsdatain:
            engine:
              type: H5File
-             obsfile: obs/hafs.t{{HH}}z.conventional_air_raob.nc
+             obsfile: obs/hafs.t{{HH}}z.conventional_air_raob_220.nc
              missing file action: "warn"
            obsgrouping:
              group variables: ["stationIdentification"]
@@ -12,10 +15,10 @@
          obsdataout:
            engine:
              type: H5File
-             obsfile: hofx/diag_conventional_air_raobw_t{{HH}}z.nc
+             obsfile: hofx/diag_conventional_air_raob_220_t{{HH}}z.nc
              allow overwrite: true
          io pool:
-           max pool size: {{TOTAL_TASKS}}
+           max pool size: {{POOL_SIZE}}
          observed variables: [windEastward, windNorthward]
          simulated variables: [windEastward, windNorthward]
        obs operator:
@@ -31,7 +34,6 @@
          variables:
          - name: windEastward
          - name: windNorthward
- 
        obs error:
          covariance model: diagonal
        # Observation Pre fitler for domain resize
@@ -75,7 +77,6 @@
          where operator: or
          action:
            name: reduce obs space
- 
        # Time window filter
        - filter: Domain Check
          apply at iterations: 0,1
@@ -86,7 +87,6 @@
              maxvalue:  10800
          action:
            name: reduce obs space
- 
        # Observation Prior Filters (QC)
        obs prior filters:
        # Regional Domain Check
@@ -148,7 +148,6 @@
          assignments:
          - name: PreUseFlag/windNorthward
            value: 0
- 
        - filter: Variable Assignment
          where:
          - variable:
@@ -181,7 +180,6 @@
          assignments:
          - name: PreUseFlag/windNorthward
            value: 101
- 
        # Inflate obs error based on obs type
        - filter: Perform Action
          filter variables:
@@ -289,7 +287,6 @@
              options:
                inflate variables: [windNorthward]
                pressure: MetaData/pressure
- 
        # Observation Post Filters (QC)
        # -------------------------------
        obs post filters:
@@ -312,7 +309,6 @@
              options:
                use_air_pressure: yes
                variable: windNorthward
- 
        # Bounds check
        - filter: Bounds Check
          apply at iterations: 0,1
@@ -341,7 +337,6 @@
            is_not_in: 3
          action:
            name: reject
- 
        # Gross Error Check (windNorthward)
        - filter: Background Check
          apply at iterations: 0,1
@@ -378,7 +373,6 @@
            is_in: 3
          action:
            name: reject
- 
        # Gross Error Check (windNorthward): cgross*0.7 if QualityMarker=3
        - filter: Background Check
          apply at iterations: 0,1
@@ -412,7 +406,6 @@
            name: inflate error
            inflation variable:
              name: ObsErrorFactorDuplicateCheck/windNorthward
- 
        # Reject data based on PreUseFlag (usage in GSI)
        - filter: Perform Action
          filter variables:
@@ -434,5 +427,7 @@
          where operator: or
          action:
            name: reject
- 
          # End of Filters
+       obs localizations:
+       - localization method: Horizontal Gaspari-Cohn
+         lengthscale: 450e3

@@ -1,20 +1,22 @@
     - obs space:
         name: ascat_winds_290
+        distribution:
+          name: "{{distribution_type}}"
+          halo size: 500e3
         obsdatain:
           engine:
             type: H5File
-            obsfile: obs/hafs.t{{HH}}z.conventinoal_osw_ascat.nc 
+            obsfile: obs/hafs.t{{HH}}z.conventinoal_osw_ascat_290.nc 
             missing file action: "warn"
         obsdataout:
           engine:
             type: H5File
-            obsfile: hofx/diag_conventional_osw_ascat_t{{HH}}z.nc
+            obsfile: hofx/diag_conventional_osw_ascat_290_t{{HH}}z.nc
             allow overwrite: true
         io pool:
-          max pool size: {{TOTAL_TASKS}} 
+          max pool size: {{POOL_SIZE}} 
         observed variables: [windEastward, windNorthward]
         simulated variables: [windEastward, windNorthward]
-
       obs operator:
         name: VertInterp
         vertical coordinate: geopotential_height
@@ -26,14 +28,12 @@
         variables:
         - name: windEastward
         - name: windNorthward
-
       linear obs operator:
         name: VertInterp
         vertical coordinate: geopotential_height
         observation vertical coordinate group: DerivedVariables
         observation vertical coordinate: adjustedHeight
         interpolation method: linear
-
       # Observation Pre Filters (QC)
       # ---------------------------------
       obs pre filters:
@@ -55,7 +55,6 @@
           maxvalue: {{MAX_LON}}
         action:
           name: reduce obs space
-
       # Reject all obs with QualityMarker > 3
       - filter: RejectList
         apply at iterations: 0,1
@@ -90,12 +89,10 @@
       - filter: Variable Transforms
         Transform: AdjustedHeightCoordinate
         SkipWhenNoObs: false
-
       # Apply variable changes needed for wind scaling
       - filter: Variable Transforms
         Transform: SurfaceWindScalingHeight
         SkipWhenNoObs: false
-
       # Assign the initial observation error (constant value, 1.5 m/s right now).
       - filter: Perform Action
         filter variables:
@@ -104,7 +101,6 @@
         action:
           name: assign error
           error parameter: 1.5
-
       # Observation Post Filters (QC)
       # -------------------------------
       obs post filters:
@@ -133,7 +129,6 @@
           maxvalue: 0.99
         action:
           name: reject
-
       # Reject ASCAT (Type 290) when observed component deviates from background by more than 5.0 m/s 
       # NOTE: This check can reject a u- or v-component of the same observation independently, 
       # which is fundamentally different from how GSI rejects obs 
@@ -151,7 +146,6 @@
             coefs: [1.0, -1.0]
         minvalue: -5.0
         maxvalue: 5.0
-
       - filter: Bounds Check
         filter variables:
         - name: windEastward
@@ -165,7 +159,6 @@
             coefs: [1.0, -1.0]
         minvalue: -5.0
         maxvalue: 5.0
-
       # Reject ASCAT (Type 290) when ambiguity check fails (returned value is negative)
       - filter: Bounds Check
         filter variables:
@@ -181,7 +174,6 @@
         maxvalue: 0.
         action:
           name: reject
-
       # All scatwinds must adjust errors based on ObsErrorFactorPressureCheck.
       # This check will inflate errors for obs that are too close to either
       # the model top or bottom.
@@ -199,7 +191,6 @@
             options:
               variable: windEastward
               inflation factor: 4.0
-
       - filter: Perform Action
         filter variables:
         - name: windNorthward
@@ -214,7 +205,6 @@
             options:
               variable: windNorthward
               inflation factor: 4.0
-
       # Gross Error Check (windEastward)
       - filter: Background Check
         apply at iterations: 0,1
@@ -230,7 +220,6 @@
             variable: windEastward
         action:
           name: reject
-
       # Gross Error Check (windNorthward)
       - filter: Background Check
         apply at iterations: 0,1
@@ -246,4 +235,6 @@
             variable: windNorthward
         action:
           name: reject
-
+       obs localizations:
+       - localization method: Horizontal Gaspari-Cohn
+         lengthscale: 450e3

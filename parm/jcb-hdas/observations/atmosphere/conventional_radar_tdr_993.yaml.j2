@@ -1,29 +1,28 @@
      - obs space:
          name: conventional_radar_tdr993
+         distribution:
+           name: "{{distribution_type}}"
+           halo size: 500e3
          obsdatain:
            engine:
              type: H5File
-             obsfile: obs/hafs.t{{HH}}z.conventional_radar_tdr.nc
+             obsfile: obs/hafs.t{{HH}}z.conventional_radar_tdr_993.nc
              missing file action: "warn"
          obsdataout:
            engine:
              type: H5File
-             obsfile: hofx/diag_conventional_radar_tdr993_t{{HH}}z.nc
+             obsfile: hofx/diag_conventional_radar_tdr_993_t{{HH}}z.nc
              allow overwrite: true
          io pool:
-           max pool size: {{TOTAL_TASKS}}
+           max pool size: {{POOL_SIZE}}
          observed variables: [radialVelocity]
          simulated variables: [radialVelocity]
- 
        obs operator:
          name: RadarRadialVelocity
- 
        linear obs operator:
          name: RadarRadialVelocity
- 
        obs error:
          covariance model: diagonal
- 
        obs pre filters:
        - filter: Domain Check
          apply at iterations: 0,1
@@ -34,7 +33,6 @@
            maxvalue: {{MAX_LAT}}
          action:
            name: reduce obs space
- 
        - filter: Domain Check
          apply at iterations: 0,1
          where:
@@ -44,7 +42,6 @@
            maxvalue: {{MAX_LON}}
          action:
            name: reduce obs space
- 
        - filter: Bounds Check
          filter variables:
          - name: radialVelocity 
@@ -53,7 +50,6 @@
          maxvalue: 75.
          action:
            name: reduce obs space 
- 
        - filter: Bounds Check
          filter variables:
          - name: radialVelocity
@@ -62,7 +58,6 @@
          maxvalue: 400.
          action:
            name: reduce obs space
- 
        - filter: Bounds Check
          filter variables:
          - name: radialVelocity
@@ -72,7 +67,6 @@
          maxvalue: 50000.
          action:
            name: reduce obs space
- 
        - filter: Bounds Check
          filter variables:
          - name: radialVelocity
@@ -81,7 +75,6 @@
          maxvalue: 92600.   # In GSI, r92=92.6e03
          action:
            name: reduce obs space
- 
        # Observation Prior Filters (QC)
        # -----------------------------------
        obs prior filters:
@@ -95,7 +88,6 @@
            maxvalue: 0.5
          action:
            name: reject
- 
        # Observation Post Filters (QC)
        #  -----------------------------
        obs post filters:
@@ -110,7 +102,6 @@
                variables:
                - name: ObsValue/radialVelocity
                absolute value: [true]
- 
        - filter: Bounds Check
          filter variables:
          - name: radialVelocity
@@ -120,7 +111,6 @@
          minvalue: 2.0
          action:
            name: reject
- 
        # Initial error assignment
        # in GSI, assign initial error 5.0 to TDR obs
        - filter: Perform Action
@@ -186,7 +176,6 @@
            is_in: 993
          - variable: MetaData/height
            minvalue: 10000.
- 
        # Adaptive error inflation: adjust observation error based OMB
        # step 1: calculate OMB
        - filter: Variable Assignment
@@ -241,7 +230,6 @@
          - variable:
              name: ObsErrorData/radialVelocity
            value: is_valid
- 
        # step 5: if obs error larger than 10, then assign as 10
        - filter: Perform Action
          filter variables:
@@ -256,7 +244,6 @@
          - variable:
              name: ObsErrorData/radialVelocity
            value: is_valid
- 
        # Create temporary ObsErrorData
        - filter: Variable Assignment
          apply at iterations: 0,1
@@ -283,7 +270,6 @@
          - variable:
              name: ObsErrorData/radialVelocity
            value: is_valid
- 
        # Set ObsError set "error parameter" if > "min value"
        - filter: Perform Action
          apply at iterations: 0,1
@@ -299,7 +285,6 @@
          - variable:
              name: ObsErrorData/radialVelocity
            value: is_valid
- 
        # Gross Error Check 
        - filter: Background Check
          apply at iterations: 0, 1
@@ -311,7 +296,6 @@
          where:
          - variable: ObsType/radialVelocity
            is_in: 993
- 
        # Re-assign err ObsErrorData <--- TempObsErrorData after gross error check.
        - filter: Perform Action
          apply at iterations: 0,1
@@ -324,3 +308,6 @@
          - variable:
              name: TempObsErrorData/radialVelocity
            value: is_valid
+       obs localizations:
+       - localization method: Horizontal Gaspari-Cohn
+         lengthscale: 450e3

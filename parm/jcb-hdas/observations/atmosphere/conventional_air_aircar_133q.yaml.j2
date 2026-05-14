@@ -1,9 +1,12 @@
      - obs space:
          name: aircar_specificHumidity_133
+         distribution:
+           name: "{{distribution_type}}"
+           halo size: 500e3
          obsdatain:
            engine:
              type: H5File
-             obsfile: obs/hafs.t{{HH}}z.conventional_air_aircar.nc
+             obsfile: obs/hafs.t{{HH}}z.conventional_air_aircar_133q.nc
              missing file action: "warn"
            obsgrouping:
              group variables: ["stationIdentification"]
@@ -12,10 +15,10 @@
          obsdataout:
            engine:
              type: H5File
-             obsfile: hofx/diag_conventional_air_carq_t{{HH}}z.nc
+             obsfile: hofx/diag_conventional_air_aircar_133q_t{{HH}}z.nc
              allow overwrite: true
          io pool:
-           max pool size: {{TOTAL_TASKS}}
+           max pool size: {{POOL_SIZE}}
          observed variables: [specificHumidity]
          simulated variables: [specificHumidity]
        obs operator:
@@ -28,13 +31,10 @@
            interpolation method: log-linear
            variables:
            - name: specificHumidity
- 
        linear obs operator:
          name: VertInterp
- 
        obs error:
          covariance model: diagonal
- 
        obs filters:
        # Regional Domain Check
        - filter: Bounds Check
@@ -61,7 +61,6 @@
          action:
            name: reject
            name: reduce obs space
- 
        # Time window filter
        - filter: Domain Check
          apply at iterations: 0,1
@@ -70,7 +69,6 @@
                name: MetaData/timeOffset # units: s
              minvalue: -10800
              maxvalue:  10800
- 
        - filter: Perform Action
          filter variables:
          - name: specificHumidity
@@ -86,7 +84,6 @@
                  name: MetaData/pressure
                xvals: [110000, 105000, 100000, 95000, 90000, 85000, 80000, 75000, 70000, 65000, 60000, 55000, 50000, 45000, 40000, 35000, 30000, 25000, 20000, 15000, 10000, 7500, 5000, 4000, 3000, 2000, 1000, 500, 400, 300, 200, 100, 0]
                errors: [0.19455, 0.19064, 0.18488, 0.17877, 0.17342, 0.16976, 0.16777, 0.16696, 0.16605, 0.16522, 0.16637, 0.17086, 0.17791, 0.18492, 0.18996, 0.19294, 0.19447, 0.19597, 0.19748, 0.19866, 0.19941, 0.19979, 0.19994, 0.19999, 0.20000, 0.20000, 0.20000, 0.20000, 0.20000, 0.20000, 0.20000, 0.20000, 0.20000]
- 
        # Error inflation based on pressure check (setupq.f90)
        - filter: Perform Action
          filter variables:
@@ -102,7 +99,6 @@
                variable: specificHumidity
                inflation factor: 8.0
                request_saturation_specific_humidity_geovals: true
- 
        # Error inflation based on errormod (qcmod.f90)
        - filter: Perform Action
          filter variables:
@@ -117,7 +113,6 @@
              options:
                inflate variables: [specificHumidity]
                pressure: MetaData/pressure
- 
        # Error inflation when QualityMarker == 3 (read_prepbufr.f90)
        - filter: Perform Action
          filter variables:
@@ -138,7 +133,6 @@
          where:
          - variable: MetaData/pressure
            maxvalue: 10000.0
- 
        # Bounds Check (ObsError)
        - filter: Bounds Check
          filter variables:
@@ -148,14 +142,12 @@
          minvalue: 0.0
          action:
            name: reduce obs space
- 
        # Bounds Check (ObsValue)
        - filter: Bounds Check
          filter variables:
          - name: specificHumidity
          minvalue: 0.0
          maxvalue: 1.0
- 
        # Create temporary ObsErrorData
        - filter: Variable Assignment
          apply at iterations: 0,1
@@ -200,7 +192,6 @@
              name: ObsErrorData/specificHumidity
            value: is_valid
          defer to post: true
- 
        # Gross Error Check
        - filter: Background Check
          apply at iterations: 0,1
@@ -227,7 +218,6 @@
          - variable: QualityMarker/specificHumidity
            is_in: 3
          defer to post: true
- 
        # Re-assign err ObsErrorData <--- TempObsErrorData after gross error check.
        - filter: Perform Action
          apply at iterations: 0,1
@@ -241,3 +231,6 @@
              name: TempObsErrorData/specificHumidity
            value: is_valid
          defer to post: true
+       obs localizations:
+       - localization method: Horizontal Gaspari-Cohn
+         lengthscale: 450e3

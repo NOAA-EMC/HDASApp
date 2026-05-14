@@ -1,5 +1,8 @@
      - obs space:
          name: radiance_abi_g16
+         distribution:
+           name: "{{distribution_type}}"
+           halo size: 500e3
          obsdatain:
            engine:
              type: H5File
@@ -10,10 +13,9 @@
              type: H5File
              obsfile: hofx/diag_radiance_abi_g16_t{{HH}}z.nc
          io pool:
-           max pool size: {{TOTAL_TASKS}}
+           max pool size: {{POOL_SIZE}}
          simulated variables: [brightnessTemperature]
          channels: &radiance_abi_g16_channels [7-16]
- 
        # Observation Operator
        # --------------------
        obs operator:
@@ -27,7 +29,6 @@
            CoefficientPath: crtm/
          linear obs operator:
            Absorbers: [H2O, O3]
- 
        # Observation Bias Correction (VarBC)
        # -----------------------------------
        obs bias:
@@ -64,7 +65,6 @@
                ratio: 1.1
                ratio for small dataset: 2.0
            output file: bc/out_satbias_radiance_abi_g16_t{{HH}}z_cov.nc
- 
        # Observation Filters (QC)
        # ------------------------
        obs pre filters:
@@ -77,7 +77,6 @@
            maxvalue: {{MAX_LAT}}
          action:
            name: reduce obs space
- 
        - filter: Domain Check
          apply at iterations: 0,1
          where:
@@ -87,7 +86,6 @@
            maxvalue: {{MAX_LON}}
          action:
            name: reduce obs space
- 
        obs prior filters:
        - filter: Perform Action
          filter variables:
@@ -96,7 +94,6 @@
          action:
            name: assign error
            error parameter vector: &radiance_abi_g16_obserr [1.4,3.0,2.5,2.2,2.0,2.0,2.0,2.0,2.0,2.0]
- 
        - filter: Variable Assignment
          assignments:
          - name: DerivedMetaData/surfaceFlag
@@ -127,7 +124,6 @@
                      name: GeoVaLs/surface_snow_area_fraction
                    minvalue: 0.99
                  value: 3
- 
        - filter: Variable Assignment
          assignments:
          - name: DerivedMetaData/surfaceParam
@@ -158,7 +154,6 @@
                      name: GeoVaLs/surface_snow_area_fraction
                    minvalue: 0.99
                  value: 15
- 
        - filter: Variable Assignment
          assignments:
          - name: DerivedMetaData/thinningCriteria
@@ -169,7 +164,6 @@
                variables:
                - name: DerivedMetaData/surfaceParam
                coefs: [1]
- 
        obs post filters:
        - filter: Bounds Check
          filter variables:
@@ -180,7 +174,6 @@
            flag all filter variables if any test variable is out of bounds: true
            minvalue: 0.0
            maxvalue: 0.5
- 
        # Satellite Zenith Angle Check
        - filter: Bounds Check
          filter variables:
@@ -191,7 +184,6 @@
          maxvalue: 65.
          action:
            name: reject
- 
       #from read_abi: Reject when cloud fraction is more than 30
        - filter: Domain Check
          filter variables:
@@ -202,7 +194,6 @@
              name: MetaData/cloudAmount
              channels: 8
            maxvalue: 30.
- 
       #from read_abi: WV Channels 8-10 scene consistency check SDTB>1.3
        - filter: Domain Check
          filter variables:
@@ -214,7 +205,6 @@
              channels: 8-10
            maxvalue: 1.3
            max_exclusive: true
- 
       # Thinning
        - filter: Gaussian Thinning
          filter variables:
@@ -229,7 +219,6 @@
          priority_variable: DerivedMetaData/thinningCriteria
          action:
            name: reject
- 
       #Surface type check
        - filter: RejectList
          filter variables:
@@ -239,7 +228,6 @@
          - variable:
              name: GeoVaLs/land_area_fraction
            minvalue: 0.99
- 
        - filter: RejectList
          filter variables:
          - name: brightnessTemperature
@@ -248,7 +236,6 @@
          - variable:
              name: GeoVaLs/surface_snow_area_fraction
            minvalue: 0.99
- 
        - filter: RejectList
          filter variables:
          - name: brightnessTemperature
@@ -257,7 +244,6 @@
          - variable:
              name: GeoVaLs/ice_area_fraction
            minvalue: 0.99
- 
        - filter: RejectList
          filter variables:
          - name: brightnessTemperature
@@ -279,7 +265,6 @@
              name: GeoVaLs/surface_snow_area_fraction
            maxvalue: 0.99
            max_exclusive: true
- 
       #BT range check
        - filter: Bounds Check
          filter variables:
@@ -289,7 +274,6 @@
          maxvalue: 1000.0
          action:
            name: reject
- 
       #Model top transmittance check
        - filter: Perform Action
          filter variables:
@@ -302,7 +286,6 @@
              channels: *radiance_abi_g16_channels
              options:
                channels: *radiance_abi_g16_channels
- 
       #Cloud detection
        - filter: Bounds Check
          filter variables:
@@ -320,7 +303,6 @@
          maxvalue: 1.0e-12
          action:
            name: reject
- 
       #Scene Consistency Check based on ch13 (10.8 micron)
        - filter: Domain Check
          filter variables:
@@ -332,7 +314,6 @@
              channels: 13
            maxvalue: 0.5
            max_exclusive: true
- 
       #Scene Consistency Channels 8-10 Based on ch 8 SDTB
        - filter: Perform Action
          filter variables:
@@ -347,7 +328,6 @@
          action:
            name: inflate error
            inflation factor: 1.1489
- 
        - filter: Perform Action
          filter variables:
          - name: brightnessTemperature
@@ -362,7 +342,6 @@
          action:
            name: inflate error
            inflation factor: 1.2923
- 
        - filter: Perform Action
          filter variables:
          - name: brightnessTemperature
@@ -377,7 +356,6 @@
          action:
            name: inflate error
            inflation factor: 1.4967
- 
        - filter: Perform Action
          filter variables:
          - name: brightnessTemperature
@@ -390,7 +368,6 @@
          action:
            name: inflate error
            inflation factor: 1.5199
- 
       #Near SST Check
        - filter: Bounds Check
          filter variables:
@@ -405,7 +382,6 @@
          maxvalue: 1.0e-12
          action:
            name: reject
- 
       #Surface Jacobian
        - filter: Perform Action
          filter variables:
@@ -421,7 +397,6 @@
                sensor: abi_g16
                obserr_demisf: [0.01, 0.02, 0.03, 0.02, 0.03]
                obserr_dtempf: [0.5, 2.0, 4.0, 2.0, 4.0]
- 
       #Channels 7, 10-16 Cloud fraction >2
        - filter: Domain Check
          filter variables:
@@ -431,7 +406,6 @@
          - variable:
              name: MetaData/cloudAmount
            maxvalue: 2
- 
       #Variable assignment, OmF non bias corrected
        - filter: Variable Assignment
          assignments:
@@ -454,7 +428,6 @@
                - name: brightnessTemperature@ObsBiasData
                  channels: 14
                coefs: [1, -1, 1, -1, 1, -1]
- 
       #Channels 7, 10-16, OmFNBC < -0.75
        - filter: Domain Check
          filter variables:
@@ -465,7 +438,6 @@
              name: OmFNBC@DerivedMetaData
            minvalue: -0.75
            max_exclusive: true
- 
       #Final gross check
        - filter: Background Check
          filter variables:
@@ -490,3 +462,6 @@
              error parameter vector: *radiance_abi_g16_obserr
          action:
            name: reject
+       obs localizations:
+       - localization method: Horizontal Gaspari-Cohn
+         lengthscale: 450e3

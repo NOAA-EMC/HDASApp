@@ -1,9 +1,12 @@
      - obs space:
          name: adpupa_stationPressure_120
+         distribution:
+           name: "{{distribution_type}}"
+           halo size: 500e3
          obsdatain:
            engine:
              type: H5File
-             obsfile: obs/hafs.t{{HH}}z.conventional_air_raob.nc
+             obsfile: obs/hafs.t{{HH}}z.conventional_air_raob_120ps.nc
              missing file action: warn
            obsgrouping:
              group variables:
@@ -13,13 +16,12 @@
          obsdataout:
            engine:
              type: H5File
-             obsfile: hofx/diag_conventional_air_raobps_t{{HH}}z.nc
+             obsfile: hofx/diag_conventional_air_raob_120ps_t{{HH}}z.nc
              allow overwrite: true
          io pool:
-           max pool size: {{TOTAL_TASKS}}
+           max pool size: {{POOL_SIZE}}
          observed variables: [stationPressure]
          simulated variables: [stationPressure]
- 
        obs operator:
          name: SfcCorrected
          variables:
@@ -28,15 +30,12 @@
          station_altitude: height
          geovar_sfc_geomz: height_above_mean_sea_level_at_surface
          geovar_geomz: geopotential_height
- 
        linear obs operator:
          name: Identity
          variables:
          - name: stationPressure
- 
        obs error:
          covariance model: diagonal
- 
        obs pre filters:
        - filter: Domain Check
          apply at iterations: 0, 1
@@ -72,7 +71,6 @@
          where operator: or
          action:
            name: reduce obs space
- 
        obs prior filters:
        - filter: Bounds Check
          filter variables:
@@ -82,7 +80,6 @@
            flag all filter variables if any test variable is out of bounds: true
            minvalue: 0.0
            maxvalue: 0.5
- 
        - filter: Perform Action
          filter variables:
          - name: stationPressure
@@ -104,7 +101,6 @@
          - name: InputObsError/stationPressure
            type: float
            source variable: ObsError/stationPressure
- 
        # Create PreUseFlag Group Variable
        - filter: Variable Assignment
          assignments:
@@ -157,7 +153,6 @@
          where:
          - variable: QualityMarker/stationPressure
            is_in: 3, 7
- 
        # Observation Post Filters (QC)
        # ----------------------------------------
        obs post filters:
@@ -186,7 +181,6 @@
                geovar_sfc_geomz: height_above_mean_sea_level_at_surface
                geovar_geomz: geopotential_height
                station_altitude: height
- 
        - filter: Variable Assignment
          assignments:
          - name: DerivedMetaData/Innovation
@@ -211,7 +205,6 @@
                obserr_bound_min: 100
                obserr_bound_max: 300
                obserr_bound_factor: 4.0
- 
        - filter: Background Check
          filter variables:
          - name: stationPressure
@@ -235,7 +228,6 @@
                obserr_bound_min: 100
                obserr_bound_max: 300
                obserr_bound_factor: 2.8
- 
        - filter: Background Check
          filter variables:
          - name: stationPressure
@@ -266,4 +258,6 @@
          where operator: or
          action:
            name: reject
- 
+       obs localizations:
+       - localization method: Horizontal Gaspari-Cohn
+         lengthscale: 450e3
