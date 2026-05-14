@@ -19,8 +19,8 @@
         branch = develop
 [submodule "sorc/ufo"]
 	path = sorc/ufo
-	url = https://github.com/jcsda/ufo.git
-        branch = develop
+	url = https://github.com/JingCheng-NOAA/ufo.git
+	branch = gpsro_fix
 [submodule "sorc/fv3"]
 	path = sorc/fv3
 	url = https://github.com/jcsda/GFDL_atmos_cubed_sphere.git
@@ -35,8 +35,8 @@
 	branch = develop
 [submodule "sorc/fv3-jedi"]
 	path = sorc/fv3-jedi
-	url = https://github.com/jcsda/fv3-jedi.git
- 	branch = develop
+	url = https://github.com/XuLu-NOAA/fv3-jedi.git
+	branch = feature/gdas_ens_with_FV3_IO
 [submodule "sorc/crtm"]
 	path = sorc/crtm
 	url = https://github.com/jcsda/crtm.git
