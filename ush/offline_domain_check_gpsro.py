@@ -14,150 +14,138 @@ e.g.
 import argparse
 import netCDF4 as nc
 import numpy as np
-from matplotlib.path import Path
 
 def parse_args():
-    p = argparse.ArgumentParser(description="Offline Domain Check for GPS RO Data")
+    p = argparse.ArgumentParser(description="Offline Domain Check for GPS RO Data (No Matplotlib)")
     p.add_argument("-i", "--input", required=True, help="Input GPS RO data netCDF")
-    p.add_argument("-o", "--output", required=True, help="Output thinned IODA file")
-    p.add_argument("-g", "--gridspec", help="HAFS grid info NetCDF file (e.g., grid_spec.nc)")
+    p.add_argument("-o", "--output", required=True, help="Output filtered IODA file")
+    p.add_argument("-g", "--gridspec", required=True, help="HAFS grid info NetCDF file")
     return p.parse_args()
 
-args = parse_args()
-obs_file = args.input
-grid_file = args.gridspec
-output_file = args.output
-
-# --- 2. Extract Model Domain Boundary ---
-print("Loading model domain...")
-with nc.Dataset(grid_file, 'r') as grid_ds:
-    grid_lat = grid_ds.variables['grid_lat'][:]
-    grid_lon = grid_ds.variables['grid_lon'][:]
-
-# Construct the boundary polygon from the outermost edges of the grid
-edge_lon = np.concatenate([
-    grid_lon[0, :],         # Bottom edge
-    grid_lon[:, -1],        # Right edge
-    grid_lon[-1, :][::-1],  # Top edge (reversed)
-    grid_lon[:, 0][::-1]    # Left edge (reversed)
-])
-edge_lat = np.concatenate([
-    grid_lat[0, :],
-    grid_lat[:, -1],
-    grid_lat[-1, :][::-1],
-    grid_lat[:, 0][::-1]
-])
-
-# Create a matplotlib Path object representing the domain polygon
-domain_polygon = Path(np.column_stack((edge_lon, edge_lat)))
-
-# --- 3. Evaluate Observations ---
-print("Loading observation coordinates...")
-src_ds = nc.Dataset(obs_file, 'r')
-meta_grp = src_ds.groups['MetaData']
-
-obs_lat = meta_grp.variables['latitude'][:]
-obs_lon = meta_grp.variables['longitude'][:]
-obs_seqnum = meta_grp.variables['sequenceNumber'][:]
-
-# Replace masked values with NaN so they aren't treated as real locations (like 3.4e38)
-lon_vals = np.ma.filled(obs_lon, np.nan)
-lat_vals = np.ma.filled(obs_lat, np.nan)
-seq_vals = np.ma.filled(obs_seqnum, -999) # Use -999 as a placeholder for missing sequence numbers
-
-print(f"Diagnostics - Grid Lon Min/Max: {grid_lon.min():.2f} / {grid_lon.max():.2f}")
-# Calculate min/max only on valid data for accurate diagnostics
-valid_lon_mask = np.isfinite(lon_vals)
-print(f"Diagnostics - Obs Lon Min/Max: {lon_vals[valid_lon_mask].min():.2f} / {lon_vals[valid_lon_mask].max():.2f}")
-
-# If the model grid uses 0-360, we must convert the observation longitudes to 0-360
-# just for the spatial evaluation.
-if grid_lon.max() > 180.0:
-    print("Converting observation longitudes to 0-360 convention for boundary check...")
-    # Convert negative longitudes (e.g., -100) to positive 0-360 format (e.g., 260)
-    lon_vals = np.where((lon_vals < 0) & np.isfinite(lon_vals), lon_vals + 360.0, lon_vals)
-
-print("Checking observations against domain boundary...")
-# Create a mask of points that are physically valid coordinates (ignoring missing data)
-valid_coord_mask = np.isfinite(lon_vals) & np.isfinite(lat_vals)
-
-# Stack ONLY the valid coordinates for the point-in-polygon check
-valid_coords = np.column_stack((lon_vals[valid_coord_mask], lat_vals[valid_coord_mask]))
-
-# Evaluate ONLY valid coordinates against the domain polygon
-is_inside_valid = domain_polygon.contains_points(valid_coords)
-
-# Get the sequence numbers corresponding to these valid coordinates
-seqnums_of_valid_points = seq_vals[valid_coord_mask]
-
-# Find sequence numbers that have at least one VALID point outside the domain
-bad_seqnums = np.unique(seqnums_of_valid_points[~is_inside_valid])
-
-# Ensure our missing placeholder (-999) isn't accidentally classified as a bad profile
-bad_seqnums = bad_seqnums[bad_seqnums != -999]
-
-# Create the master keep_mask for the ENTIRE array (including rows with FillValues)
-# If a sequence number is NOT in the bad list, we keep all its levels
-keep_mask = ~np.isin(seq_vals, bad_seqnums)
-
-# Get the actual array indices to keep
-valid_indices = np.where(keep_mask)[0]
-
-num_total = len(obs_lat)
-num_kept = len(valid_indices)
-num_dropped = num_total - num_kept
-
-print(f"Total observations: {num_total}")
-print(f"Observations dropped: {num_dropped} (belonging to {len(bad_seqnums)} out-of-bounds profiles)")
-print(f"Observations kept: {num_kept}")
-if num_kept == 0:
-    print("No observations are inside the domain. Exiting without creating output.")
-    src_ds.close()
-    exit()
-
-# --- 4. Write Filtered Data to New NetCDF ---
-print(f"Writing filtered data to {output_file}...")
-dst_ds = nc.Dataset(output_file, 'w', format='NETCDF4')
-
-# Copy Global Attributes
-src_global_attrs = {attr: src_ds.getncattr(attr) for attr in src_ds.ncattrs()}
-dst_ds.setncatts(src_global_attrs)
-
-# Create Location Dimension
-dst_ds.createDimension('Location', num_kept)
-
-def copy_variable(src_var, dst_grp_or_ds, var_name, indices):
-    """Helper function to copy variables and slice them using our valid_indices."""
-    fill_value = getattr(src_var, '_FillValue', None)
+def is_inside_vectorized(x, y, poly_x, poly_y):
+    """
+    Vectorized Ray Casting algorithm to check if points (x, y) are inside 
+    the polygon defined by vertices (poly_x, poly_y).
+    """
+    n = len(poly_x)
+    inside = np.zeros(len(x), dtype=bool)
     
-    dst_var = dst_grp_or_ds.createVariable(
-        varname=var_name, 
-        datatype=src_var.datatype, 
-        dimensions=src_var.dimensions, 
-        fill_value=fill_value
+    # Loop over the edges of the polygon
+    p1x, p1y = poly_x[0], poly_y[0]
+    for i in range(n + 1):
+        p2x, p2y = poly_x[i % n], poly_y[i % n]
+        
+        # Find points where the ray (horizontal line) intersects the edge
+        # Condition 1: y is between the y-coordinates of the edge endpoints
+        mask = (y > min(p1y, p2y)) & (y <= max(p1y, p2y))
+        
+        # Condition 2: x is to the left of the intersection point
+        if np.any(mask):
+            # Calculate x-coordinate of the intersection of the edge with line Y=y
+            x_inters = (y[mask] - p1y) * (p2x - p1x) / (p2y - p1y + 1e-10) + p1x
+            inside[mask] = inside[mask] ^ (x[mask] < x_inters)
+            
+        p1x, p1y = p2x, p2y
+        
+    return inside
+
+def main():
+    args = parse_args()
+
+    # --- Extract Model Domain Boundary ---
+    print("Loading model domain...")
+    with nc.Dataset(args.gridspec, 'r') as grid_ds:
+        grid_lat = grid_ds.variables['grid_lat'][:]
+        grid_lon = grid_ds.variables['grid_lon'][:]
+
+    # Construct boundary vertices
+    edge_lon = np.concatenate([
+        grid_lon[0, :],         # Bottom edge
+        grid_lon[:, -1],        # Right edge
+        grid_lon[-1, :][::-1],  # Top edge
+        grid_lon[:, 0][::-1]    # Left edge
+    ])
+    edge_lat = np.concatenate([
+        grid_lat[0, :],
+        grid_lat[:, -1],
+        grid_lat[-1, :][::-1],
+        grid_lat[:, 0][::-1]
+    ])
+
+    # --- Evaluate Observations ---
+    print("Loading observation coordinates...")
+    src_ds = nc.Dataset(args.input, 'r')
+    meta_grp = src_ds.groups['MetaData']
+
+    obs_lat = meta_grp.variables['latitude'][:]
+    obs_lon = meta_grp.variables['longitude'][:]
+    obs_seqnum = meta_grp.variables['sequenceNumber'][:]
+
+    # Handle masked arrays
+    lon_vals = np.ma.filled(obs_lon, np.nan)
+    lat_vals = np.ma.filled(obs_lat, np.nan)
+    seq_vals = np.ma.filled(obs_seqnum, -999)
+
+    # Convert to 0-360 if grid uses it
+    if grid_lon.max() > 180.0:
+        print("Normalizing longitudes to 0-360...")
+        lon_vals = np.where((lon_vals < 0) & np.isfinite(lon_vals), lon_vals + 360.0, lon_vals)
+
+    print("Checking spatial bounds (Vectorized PIP)...")
+    valid_coord_mask = np.isfinite(lon_vals) & np.isfinite(lat_vals)
+    
+    # Check only valid points
+    is_inside = np.zeros(len(lon_vals), dtype=bool)
+    is_inside[valid_coord_mask] = is_inside_vectorized(
+        lon_vals[valid_coord_mask], 
+        lat_vals[valid_coord_mask], 
+        edge_lon, edge_lat
     )
-    
-    # Copy attributes (excluding _FillValue)
-    var_attrs = {attr: src_var.getncattr(attr) for attr in src_var.ncattrs() if attr != '_FillValue'}
-    dst_var.setncatts(var_attrs)
-    
-    # Write sliced data
-    dst_var[:] = src_var[indices]
 
-for var_name, src_var in src_ds.variables.items():
-    copy_variable(src_var, dst_ds, var_name, valid_indices)
+    # --- Profile-based Filtering ---
+    # Find sequence numbers that have any point OUTSIDE
+    bad_seqnums = np.unique(seq_vals[valid_coord_mask & ~is_inside])
+    bad_seqnums = bad_seqnums[bad_seqnums != -999]
 
-for grp_name, src_grp in src_ds.groups.items():
-    dst_grp = dst_ds.createGroup(grp_name)
-    grp_attrs = {attr: src_grp.getncattr(attr) for attr in src_grp.ncattrs()}
-    dst_grp.setncatts(grp_attrs)
-    
-    for var_name, src_var in src_grp.variables.items():
-        copy_variable(src_var, dst_grp, var_name, valid_indices)
+    # Keep only profiles where NO points were outside
+    keep_mask = ~np.isin(seq_vals, bad_seqnums)
+    valid_indices = np.where(keep_mask)[0]
 
-# --- 5. Cleanup ---
-src_ds.close()
-dst_ds.close()
+    num_total = len(obs_lat)
+    num_kept = len(valid_indices)
+    print(f"Total: {num_total} | Kept: {num_kept} | Dropped: {num_total - num_kept}")
 
-print("Filtering complete!")
+    if num_kept == 0:
+        print("No data in domain. Exiting.")
+        src_ds.close()
+        return
 
+    # --- Write Output ---
+    print(f"Writing to {args.output}...")
+    with nc.Dataset(args.output, 'w', format='NETCDF4') as dst_ds:
+        # Copy global attributes
+        dst_ds.setncatts({attr: src_ds.getncattr(attr) for attr in src_ds.ncattrs()})
+        dst_ds.createDimension('Location', num_kept)
+
+        def copy_var(src_v, parent_dst, name, idx):
+            fval = getattr(src_v, '_FillValue', None)
+            dv = parent_dst.createVariable(name, src_v.datatype, src_v.dimensions, fill_value=fval)
+            dv.setncatts({a: src_v.getncattr(a) for a in src_v.ncattrs() if a != '_FillValue'})
+            dv[:] = src_v[idx]
+
+        # Top level variables
+        for v_name, v_obj in src_ds.variables.items():
+            copy_var(v_obj, dst_ds, v_name, valid_indices)
+
+        # Groups (IODA style)
+        for g_name, g_obj in src_ds.groups.items():
+            new_grp = dst_ds.createGroup(g_name)
+            new_grp.setncatts({a: g_obj.getncattr(a) for a in g_obj.ncattrs()})
+            for v_name, v_obj in g_obj.variables.items():
+                copy_var(v_obj, new_grp, v_name, valid_indices)
+
+    src_ds.close()
+    print("Complete.")
+
+if __name__ == "__main__":
+    main()
