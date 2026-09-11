@@ -3,6 +3,8 @@ output:
     states:
     - datetime: '{{atmosphere_background_time_iso6}}'
       filetype: fms restart
+      use_fms_lib: false
+      regional restart: true
       prefix: Inc6
       datapath: ./
       frequency: PT3H

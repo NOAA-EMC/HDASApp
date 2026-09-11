@@ -2,6 +2,8 @@ members from template:
   template:
     datetime: "{{ atmosphere_background_time_iso6 }}"
     filetype: fms restart
+    use_fms_lib: false
+    regional restart: true
     datapath: ensemble_data/mem%mem%
     filename_core: {{atmosphere_background_time_prefix6}}fv_core.res{{nesttilestrnc}}
     filename_trcr: {{atmosphere_background_time_prefix6}}fv_tracer.res{{nesttilestrnc}}
@@ -27,11 +29,12 @@ members from template:
       mole_fraction_of_ozone_in_air: {{mole_fraction_of_ozone_in_air}}
       skin_temperature_at_surface: {{skin_temperature_at_surface}}
       air_pressure_at_surface: {{air_pressure_at_surface}}
-      geopotential_height_times_gravity_at_surface: {{geopotential_height_times_gravity_at_surface}}
+      geopotential_at_surface: {{geopotential_at_surface}}
       soilMoistureVolumetric: {{soilMoistureVolumetric}}
       totalSnowDepth: {{totalSnowDepth}}
       eastward_wind_at_surface: {{eastward_wind_at_surface}}
       northward_wind_at_surface: {{northward_wind_at_surface}}
+      ratio_of_wind_at_surface_adjacent_layer_to_wind_at_10m: {{ratio_of_wind_at_surface_adjacent_layer_to_wind_at_10m}}
   pattern: '%mem%'
   nmembers: {{atmosphere_number_ensemble_members}}
   zero padding: 3

@@ -1,6 +1,7 @@
      - obs space:
          name: adpsfc_winds_281
-         distribution:
+         use data frame container: true
+         redistribution:
            name: "{{distribution_type}}"
            halo size: 500e3
          obsdatain:
@@ -17,6 +18,7 @@
              type: H5File
              obsfile: hofx/diag_conventional_land_synop_281_t{{HH}}z.nc
              allow overwrite: true
+           write multiple files: false
          io pool:
            max pool size: {{POOL_SIZE}}
          observed variables: [windEastward, windNorthward]
@@ -24,7 +26,7 @@
        obs operator:
          name: VertInterp
          hofx_scaling: true
-         hofx scaling field: wind_reduction_factor_at_10m
+         hofx scaling field: ratio_of_wind_at_surface_adjacent_layer_to_wind_at_10m
          hofx scaling field group: GeoVaLs
          vertical coordinate: air_pressure
          observation vertical coordinate: pressure

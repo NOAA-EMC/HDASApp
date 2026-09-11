@@ -3,18 +3,21 @@ output:
     states:
     - datetime: '{{atmosphere_background_time_iso}}'
       filetype: fms restart
+      regional restart: true
       prefix: Inc3
       datapath: ./
       state variables: {{analysis_variables}}
       field io names: *field_io_names
     - datetime: '{{atmosphere_background_time_iso6}}'
       filetype: fms restart
+      regional restart: true
       datapath: ./
       prefix: Inc6
       state variables: {{analysis_variables}}
       field io names: *field_io_names
     - datetime: '{{atmosphere_background_time_iso9}}'
       filetype: fms restart
+      regional restart: true
       datapath: ./
       prefix: Inc9
       state variables: {{analysis_variables}}

@@ -1,0 +1,12 @@
+solver: Deterministic LETKF
+use linear observer: true
+vertical localization:
+  fraction of retained variance: 0.85
+  lengthscale: 0.5
+  lengthscale units: logp
+  write eigen vectors: false
+  read eigen vectors: false
+inflation:
+  rtps: 0.5
+  rtpp: 0.6
+  mult: 1.1

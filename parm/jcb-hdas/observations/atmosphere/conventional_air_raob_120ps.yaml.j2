@@ -1,6 +1,7 @@
      - obs space:
          name: adpupa_stationPressure_120
-         distribution:
+         use data frame container: true
+         redistribution:
            name: "{{distribution_type}}"
            halo size: 500e3
          obsdatain:
@@ -18,6 +19,7 @@
              type: H5File
              obsfile: hofx/diag_conventional_air_raob_120ps_t{{HH}}z.nc
              allow overwrite: true
+           write multiple files: false
          io pool:
            max pool size: {{POOL_SIZE}}
          observed variables: [stationPressure]

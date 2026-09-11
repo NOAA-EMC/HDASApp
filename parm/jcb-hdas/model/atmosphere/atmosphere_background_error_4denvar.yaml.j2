@@ -4,6 +4,8 @@ members from template:
     states:
     - datetime: "{{ atmosphere_background_time_iso }}"
       filetype: fms restart
+      use_fms_lib: false
+      regional restart: true
       state variables: {{state_variables_B}}
       field io names: *field_io_names
       datapath: {{ atmosphere_background_ensemble_path }}
@@ -14,6 +16,8 @@ members from template:
       filename_cplr: {{atmosphere_background_time_prefix}}coupler.res
     - datetime: "{{ atmosphere_background_time_iso6 }}"
       filetype: fms restart
+      use_fms_lib: false
+      regional restart: true
       state variables: {{state_variables_B}}
       field io names: *field_io_names
       datapath: {{ atmosphere_background_ensemble_path }}
@@ -24,6 +28,8 @@ members from template:
       filename_cplr: {{atmosphere_background_time_prefix6}}coupler.res
     - datetime: "{{ atmosphere_background_time_iso9 }}"
       filetype: fms restart
+      use_fms_lib: false
+      regional restart: true
       state variables: {{state_variables_B}}
       field io names: *field_io_names
       datapath: {{ atmosphere_background_ensemble_path }}

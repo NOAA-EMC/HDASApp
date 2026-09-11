@@ -1,6 +1,8 @@
 states:
 - datetime: "{{ atmosphere_background_time_iso }}"
   filetype: fms restart
+  use_fms_lib: false
+  regional restart: true
   datapath: {{ atmosphere_background_path }}
   filename_core: {{atmosphere_background_time_prefix}}fv_core.res{{nesttilestrnc}}
   filename_trcr: {{atmosphere_background_time_prefix}}fv_tracer.res{{nesttilestrnc}}
@@ -26,13 +28,15 @@ states:
    mole_fraction_of_ozone_in_air: {{mole_fraction_of_ozone_in_air}}
    skin_temperature_at_surface: {{skin_temperature_at_surface}}
    air_pressure_at_surface: {{air_pressure_at_surface}}
-   geopotential_height_times_gravity_at_surface: {{geopotential_height_times_gravity_at_surface}}
+   geopotential_at_surface: {{geopotential_at_surface}}
    soilMoistureVolumetric: {{soilMoistureVolumetric}}
    totalSnowDepth: {{totalSnowDepth}}
    eastward_wind_at_surface: {{eastward_wind_at_surface}}
    northward_wind_at_surface: {{northward_wind_at_surface}}
+   ratio_of_wind_at_surface_adjacent_layer_to_wind_at_10m: {{ratio_of_wind_at_surface_adjacent_layer_to_wind_at_10m}}
 - datetime: "{{ atmosphere_background_time_iso6 }}"
   filetype: fms restart
+  regional restart: true
   datapath: {{ atmosphere_background_path }}
   filename_core: {{atmosphere_background_time_prefix6}}fv_core.res{{nesttilestrnc}}
   filename_trcr: {{atmosphere_background_time_prefix6}}fv_tracer.res{{nesttilestrnc}}
@@ -43,6 +47,7 @@ states:
   field io names: *field_io_names
 - datetime: "{{ atmosphere_background_time_iso9 }}"
   filetype: fms restart
+  regional restart: true
   datapath: {{ atmosphere_background_path }}
   filename_core: {{atmosphere_background_time_prefix9}}fv_core.res{{nesttilestrnc}}
   filename_trcr: {{atmosphere_background_time_prefix9}}fv_tracer.res{{nesttilestrnc}}

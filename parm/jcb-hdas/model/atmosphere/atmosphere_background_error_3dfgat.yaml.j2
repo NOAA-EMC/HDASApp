@@ -4,6 +4,8 @@ members from template:
     states:
     - datetime: "{{ atmosphere_background_time_iso6 }}"
       filetype: fms restart
+      use_fms_lib: false
+      regional restart: true
       state variables: {{state_variables}}
       field io names: *field_io_names
       datapath: {{ atmosphere_background_ensemble_path }}
