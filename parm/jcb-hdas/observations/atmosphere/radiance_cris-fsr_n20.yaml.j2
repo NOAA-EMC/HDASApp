@@ -60,6 +60,7 @@
                ratio: 1.1
                ratio for small dataset: 2.0
            output file: bc/out_satbias_radiance_cris-fsr_n20_t{{HH}}z_cov.nc
+
        # Observation Pre Filters (QC)
        # ----------------------------
        obs pre filters:
@@ -169,6 +170,7 @@
                coefs: [62.5]
                intercept: 76375
                use channel numbers: true
+
        - filter: Variable Assignment
          assignments:
          - name: MetaData/sensorCentralWavenumber
@@ -188,6 +190,7 @@
                coefs: [62.5]
                intercept: 116812.5
                use channel numbers: true
+
        # Step 2: Transform radiance to brightness temperature
        - filter: Variable Transforms
          Transform: SatBrightnessTempFromRad
@@ -200,6 +203,7 @@
          radiance units: wavenumber
          planck1: 1.191042953e-16
          planck2: 1.4387774e-2
+
        # Step 3: Assign observation error
        - filter: Perform Action
          filter variables:
@@ -241,6 +245,7 @@
                     1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,
                     1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,
                     1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000,1.000 ]
+
        # Step 4: Create cloudFree variable
        - filter: Variable Assignment
          assignments:
@@ -253,6 +258,7 @@
                - name: ObsValue/cloudCoverTotal
                coefs: [-100] 
                intercept: 100 
+
        # Step 5: Data Thinning
        - filter: Gaussian Thinning
          filter variables:
@@ -297,6 +303,7 @@
            minvalue: 1.0e-12
          action:
            name: reject
+
        # Step 7: Observation Error Inflation based on Wavenumber
        - filter: Perform Action
          filter variables:
@@ -309,6 +316,7 @@
              channels: *radiance_cris-fsr_n20_channels
              options:
                channels: *radiance_cris-fsr_n20_channels
+
        # Step 8: Observation Range Sanity Check
        # Valid range: (50, 550)
        - filter: Bounds Check
@@ -319,6 +327,7 @@
          maxvalue: 549.99999
          action:
            name: reject
+
        # Step 9: Topography Check
        - filter: Perform Action
          filter variables:
@@ -331,7 +340,8 @@
              channels: *radiance_cris-fsr_n20_channels
              options:
                channels: *radiance_cris-fsr_n20_channels
-               sensor: cris-fsr_n20
+               sensor: infrared
+
        # Step 10: Transmittance Top Check
        - filter: Perform Action
          filter variables:
@@ -344,6 +354,7 @@
              channels: *radiance_cris-fsr_n20_channels
              options:
                channels: *radiance_cris-fsr_n20_channels
+
        # Step 11: Cloud Detection Check
        - filter: Bounds Check
          filter variables:
@@ -361,6 +372,7 @@
          maxvalue: 1.0e-12
          action:
            name: reject
+
        # Step 12: Surface Temperature Jacobian Check over Land
        - filter: Bounds Check
          filter variables:
@@ -379,6 +391,7 @@
            flag: SurfaceTempJacobianCheck
            ignore: rejected observations
          - name: reject
+
        # Step 13: NSST Retrieval Check
        - filter: Bounds Check
          filter variables:
@@ -397,6 +410,7 @@
          - name: set
            flag: NearSSTRetCheckIR
          - name: reject
+
        # Step 14: Surface Jacobians Check
        - filter: Perform Action
          filter variables:
@@ -412,6 +426,7 @@
                obserr_demisf: [0.01, 0.02, 0.03, 0.02, 0.03]
                obserr_dtempf: [0.50, 2.00, 4.00, 2.00, 4.00]
                sensor: cris-fsr_n20
+
        # Step 15: Gross check
        - filter: Background Check
          filter variables:
@@ -438,6 +453,7 @@
            flag: GrossCheck
            ignore: rejected observations
          - name: reject
+
        # Step 16: Useflag Check
        - filter: Bounds Check
          filter variables:
@@ -455,6 +471,7 @@
            flag: UseflagCheck
            ignore: rejected observations
          - name: reject
+
        obs localizations:
        - localization method: Horizontal Gaspari-Cohn
          lengthscale: 450e3

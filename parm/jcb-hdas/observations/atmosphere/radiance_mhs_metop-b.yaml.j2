@@ -19,7 +19,7 @@
            max pool size: {{POOL_SIZE}}
          simulated variables: [brightnessTemperature]
          channels: &radiance_mhs_metop-b_channels 1-5
-     
+
        # Observation Operator
        # --------------------
        obs operator:
@@ -31,7 +31,7 @@
            CoefficientPath: crtm/
          linear obs operator:
            Absorbers: [H2O, O3]
-     
+
        # Observation Bias Correction (VarBC)
        # -----------------------------------
        obs bias:
@@ -64,7 +64,7 @@
                ratio: 1.1
                ratio for small dataset: 2.0
            output file: bc/out_satbias_radiance_mhs_metop-b_t{{HH}}z_cov.nc
-     
+
        # ------------------------
        obs pre filters:
        - filter: Domain Check
@@ -85,6 +85,7 @@
            maxvalue: {{MAX_LON}}
          action:
            name: reduce obs space
+
        # Remove observations from the Edge of the Scan
        - filter: Domain Check
          filter variables:
@@ -96,7 +97,7 @@
            is_in: 10-81
          action:
            name: reduce obs space
-     
+
        # Data Thinning
        - filter: Gaussian Thinning
          horizontal_mesh: 45
@@ -175,7 +176,7 @@
              name: GeoVaLs/surface_snow_area_fraction
            maxvalue: 0.99
            max_exclusive: true
-     
+
        # Step D: Get Departure ObsMinusHofx = ObsValue - HofX
        - filter: Variable Assignment
          assignments:
@@ -193,6 +194,7 @@
                coefs:
                - 1
                - -1
+
        # Step E: Get cloud_index ("dsi" in GSI sub "qc_mhs")
        - filter: Variable Assignment
          assignments:
@@ -300,7 +302,7 @@
          - variable:
              name: DerivedMetaData/cloud_index
            maxvalue: 0.0
-     
+
        # Step F: Get tpwc_index =((ObsMinusHofX_1 - 7.5*dsi)/10.0)**2+(dsi)**2
        - filter: Variable Assignment
          assignments:
@@ -327,6 +329,7 @@
                - name: DerivedMetaData/tpwc_indexA
                - name: DerivedMetaData/cloud_index
                exponents: [2, 2]
+
        # Step H: Assign inflationFactor0 = (1 - tpwc_index^2)
        - filter: Variable Assignment
          assignments:
@@ -380,7 +383,7 @@
          - variable:
              name: DerivedMetaData/tpwc_index
            minvalue: 1.0
-     
+
        # Step J: Initial error inflation by inflationFactor1
        - filter: Perform Action
          filter variables:
@@ -394,7 +397,6 @@
            name: inflate error
            inflation variable:
              name: DerivedMetaData/inflationFactor1
-     
        # Step J1: Observation error inflation based on topography check
        - filter: Variable Assignment
          assignments:
@@ -405,7 +407,7 @@
              name: ObsErrorFactorTopoRad@ObsFunction
              channels: *radiance_mhs_metop-b_channels
              options:
-               sensor: &radiance_mhs_metop-b_sensor mhs_metop-b
+               sensor: microwave
                channels: *radiance_mhs_metop-b_channels
        - filter: Perform Action
          filter variables:
@@ -420,7 +422,6 @@
          - variable:
              name: DerivedMetaData/tpwc_index
            maxvalue: 1.0
-     
        # Step J2: Obs error inflation based on TOA Transmittance check
        - filter: Variable Assignment
          assignments:
@@ -432,7 +433,6 @@
              channels: *radiance_mhs_metop-b_channels
              options:
                channels: *radiance_mhs_metop-b_channels
-     
        - filter: Perform Action
          filter variables:
          - name: brightnessTemperature
@@ -442,7 +442,7 @@
            inflation variable:
              name: ObsErrorFactorTransmitTop@DerivedMetaData
              channels: *radiance_mhs_metop-b_channels
-     
+
        # Step K: Find gross error check bounds
        #  Note, use DerivedMetaData/inflationFactor1 for "obserr_bound_latitude"
        - filter: Variable Assignment
@@ -454,7 +454,7 @@
              name: ObsErrorBoundMW@ObsFunction
              channels: *radiance_mhs_metop-b_channels
              options:
-               sensor: *radiance_mhs_metop-b_sensor
+               sensor: &radiance_mhs_metop-b_sensor mhs_metop-b
                channels: *radiance_mhs_metop-b_channels
                obserr_bound_latitude:
                  name: DerivedMetaData/inflationFactor1
@@ -479,7 +479,6 @@
            channels: *radiance_mhs_metop-b_channels
          action:
            name: reject
-     
        # Step K2: Toss all data with tpwc_index > 1.0
        - filter: BlackList
          where:
@@ -499,7 +498,7 @@
            maxvalue: 1.0
          action:
            name: reject
-     
+
        # Step L: Conduct inter-channel check
        - filter: Bounds Check
          filter variables:
@@ -516,7 +515,6 @@
          maxvalue: 1.0e-12
          action:
            name: reject
-     
        # Step L1:  Conduct Useflag check
        - filter: Bounds Check
          filter variables:
@@ -532,7 +530,7 @@
          minvalue: 1.0e-12
          action:
            name: reject
-     
+
        # Step M: Observation error inflation based on surface Jacobian check
        - filter: Variable Assignment
          assignments:
@@ -558,6 +556,7 @@
            inflation variable:
              name: ObsErrorFactorSurfJacobian@DerivedMetaData
              channels: *radiance_mhs_metop-b_channels
+
        obs localizations:
        - localization method: Horizontal Gaspari-Cohn
          lengthscale: 450e3
