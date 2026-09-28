@@ -85,6 +85,15 @@
            maxvalue: {{MAX_LON}}
          action:
            name: reduce obs space
+       - filter: Domain Check
+         apply at iterations: 0,1
+         where:
+           - variable:
+               name: MetaData/timeOffset 
+             minvalue: -10800
+             maxvalue:  10800
+         action:
+           name: reduce obs space
 
        # Remove observations from the Edge of the Scan
        - filter: Domain Check

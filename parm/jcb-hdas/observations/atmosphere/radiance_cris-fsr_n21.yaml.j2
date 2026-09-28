@@ -24,12 +24,14 @@
        obs operator:
          name: CRTM
          Absorbers: [H2O, O3, CO2]
+         SurfaceWindGeoVars: uv
          obs options:
            Sensor_ID: cris-fsr_n21
            EndianType: little_endian
            CoefficientPath: crtm/
          linear obs operator:
            Absorbers: [H2O, O3]
+           zeroO3JacRange: [996, 1170]
        obs bias:
          input file: obs/satbias_radiance_cris-fsr_n21_t{{HH}}z.nc
          output file: bc/out_satbias_radiance_cris-fsr_n21_t{{HH}}z.nc
@@ -80,6 +82,15 @@
              name: MetaData/longitude
            minvalue: {{MIN_LON}}
            maxvalue: {{MAX_LON}}
+         action:
+           name: reduce obs space
+       - filter: Domain Check
+         apply at iterations: 0,1
+         where:
+           - variable:
+               name: MetaData/timeOffset 
+             minvalue: -10800
+             maxvalue:  10800
          action:
            name: reduce obs space
        # -------------------------------
@@ -259,7 +270,17 @@
                coefs: [-100] 
                intercept: 100 
 
-       # Step 5: Data Thinning
+       # Step 5: Observation Range Sanity Check
+       - filter: Bounds Check
+         filter variables:
+         - name: brightnessTemperature
+           channels: *radiance_cris-fsr_n21_channels
+         minvalue: 50.00001
+         maxvalue: 549.99999
+         action:
+           name: reject
+
+       # Step 6: Data Thinning
        - filter: Gaussian Thinning
          filter variables:
          - name: brightnessTemperature
@@ -272,6 +293,7 @@
            name: reduce obs space
 
        obs prior filters:
+       # Step 7: online geo-domain Check, rejecting observations outside of regional MPAS domain
        - filter: Bounds Check
          filter variables:
          - name: brightnessTemperature
@@ -287,7 +309,7 @@
          - name: reject
 
        obs post filters:
-       # Step 6: Wavenumber Check
+       # Step 8: Wavenumber Check
        - filter: RejectList
          filter variables:
          - name: brightnessTemperature
@@ -304,7 +326,7 @@
          action:
            name: reject
 
-       # Step 7: Observation Error Inflation based on Wavenumber
+       # Step 9: Observation Error Inflation based on Wavenumber
        - filter: Perform Action
          filter variables:
          - name: brightnessTemperature
@@ -317,18 +339,7 @@
              options:
                channels: *radiance_cris-fsr_n21_channels
 
-       # Step 8: Observation Range Sanity Check
-       # Valid range: (50, 550)
-       - filter: Bounds Check
-         filter variables:
-         - name: brightnessTemperature
-           channels: *radiance_cris-fsr_n21_channels
-         minvalue: 50.00001
-         maxvalue: 549.99999
-         action:
-           name: reject
-
-       # Step 9: Topography Check
+       # Step 10: Topography Check
        - filter: Perform Action
          filter variables:
          - name: brightnessTemperature
@@ -342,7 +353,7 @@
                channels: *radiance_cris-fsr_n21_channels
                sensor: infrared
 
-       # Step 10: Transmittance Top Check
+       # Step 11: Transmittance Top Check
        - filter: Perform Action
          filter variables:
          - name: brightnessTemperature
@@ -355,7 +366,7 @@
              options:
                channels: *radiance_cris-fsr_n21_channels
 
-       # Step 11: Cloud Detection Check
+       # Step 12: Cloud Detection Check
        - filter: Bounds Check
          filter variables:
          - name: brightnessTemperature
@@ -370,10 +381,13 @@
              obserr_dtempf: [0.50, 2.00, 4.00, 2.00, 4.00]
              error parameter vector: *radiance_cris-fsr_n21_oberr
          maxvalue: 1.0e-12
-         action:
-           name: reject
+         actions:
+         - name: set
+           flag: CloudDetectMinResidualIR
+           ignore: rejected observations
+         - name: reject
 
-       # Step 12: Surface Temperature Jacobian Check over Land
+       # Step 13: Surface Temperature Jacobian Check over Land
        - filter: Bounds Check
          filter variables:
          - name: brightnessTemperature
@@ -392,7 +406,7 @@
            ignore: rejected observations
          - name: reject
 
-       # Step 13: NSST Retrieval Check
+       # Step 14: NSST Retrieval Check
        - filter: Bounds Check
          filter variables:
          - name: brightnessTemperature
@@ -411,7 +425,7 @@
            flag: NearSSTRetCheckIR
          - name: reject
 
-       # Step 14: Surface Jacobians Check
+       # Step 15: Surface Jacobians Check
        - filter: Perform Action
          filter variables:
          - name: brightnessTemperature
@@ -427,7 +441,7 @@
                obserr_dtempf: [0.50, 2.00, 4.00, 2.00, 4.00]
                sensor: cris-fsr_n21
 
-       # Step 15: Gross check
+       # Step 16: Gross check
        - filter: Background Check
          filter variables:
          - name: brightnessTemperature
@@ -454,7 +468,7 @@
            ignore: rejected observations
          - name: reject
 
-       # Step 16: Useflag Check
+       # Step 17: Useflag Check
        - filter: Bounds Check
          filter variables:
          - name: brightnessTemperature

@@ -33,6 +33,7 @@
            CoefficientPath: crtm/
          linear obs operator:
            Absorbers: [H2O, O3]
+           zeroO3JacRange: [996, 1170]
      # Observation Bias Correction (VarBC)
      # -----------------------------------
        obs bias:
@@ -88,6 +89,15 @@
              name: MetaData/longitude
            minvalue: {{MIN_LON}}
            maxvalue: {{MAX_LON}}
+         action:
+           name: reduce obs space
+       - filter: Domain Check
+         apply at iterations: 0,1
+         where:
+           - variable:
+               name: MetaData/timeOffset 
+             minvalue: -10800
+             maxvalue:  10800
          action:
            name: reduce obs space
        - filter: Create Diagnostic Flags

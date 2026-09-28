@@ -33,6 +33,8 @@
            CoefficientPath: crtm/
          linear obs operator:
            Absorbers: [H2O, O3]
+           zeroO3JacRange: [996, 1170]
+
      # Observation Bias Correction (VarBC)
      # -----------------------------------
        obs bias:
@@ -69,6 +71,7 @@
                ratio: 1.1
                ratio for small dataset: 2.0
            output file: bc/out_satbias_radiance_abi_g16_t{{HH}}z_cov.nc
+
      # Observation Filters (QC)
      # ------------------------
        obs pre filters:
@@ -88,6 +91,15 @@
              name: MetaData/longitude
            minvalue: {{MIN_LON}}
            maxvalue: {{MAX_LON}}
+         action:
+           name: reduce obs space
+       - filter: Domain Check
+         apply at iterations: 0,1
+         where:
+           - variable:
+               name: MetaData/timeOffset 
+             minvalue: -10800
+             maxvalue:  10800
          action:
            name: reduce obs space
        - filter: Create Diagnostic Flags
@@ -151,7 +163,6 @@
          actions:
          - name: set
            flag: ZenithAngleCheck
-         #- name: reject
          - name: reduce obs space
 
        # ------------------------------------------------------------------------------------------------------------------------
