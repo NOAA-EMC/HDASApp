@@ -156,35 +156,35 @@
                variables:
                - name: ObsErrorData/specificHumidity
        # Set ObsError set "error parameter" if < "max value"
-       - filter: Perform Action
-         apply at iterations: 0,1
-         filter variables:
-         - name: specificHumidity
-         action:
-           name: assign error
-           error parameter: 10.0
-         where:
-         - variable:
-             name: ObsErrorData/specificHumidity
-           maxvalue: 10.0
-         - variable:
-             name: ObsErrorData/specificHumidity
-           value: is_valid
-       # Set ObsError set "error parameter" if > "min value"
-       - filter: Perform Action
-         apply at iterations: 0,1
-         filter variables:
-         - name: specificHumidity
-         action:
-           name: assign error
-           error parameter: 100.0
-         where:
-         - variable:
-             name: ObsErrorData/specificHumidity
-           minvalue: 100.0
-         - variable:
-             name: ObsErrorData/specificHumidity
-           value: is_valid
+#       - filter: Perform Action
+#         apply at iterations: 0,1
+#         filter variables:
+#         - name: specificHumidity
+#         action:
+#           name: assign error
+#           error parameter: 10.0
+#         where:
+#         - variable:
+#             name: ObsErrorData/specificHumidity
+#           maxvalue: 10.0
+#         - variable:
+#             name: ObsErrorData/specificHumidity
+#           value: is_valid
+#       # Set ObsError set "error parameter" if > "min value"
+#       - filter: Perform Action
+#         apply at iterations: 0,1
+#         filter variables:
+#         - name: specificHumidity
+#         action:
+#           name: assign error
+#           error parameter: 100.0
+#         where:
+#         - variable:
+#             name: ObsErrorData/specificHumidity
+#           minvalue: 100.0
+#         - variable:
+#             name: ObsErrorData/specificHumidity
+#           value: is_valid
        # Gross Error Check
        - filter: Background Check
          apply at iterations: 0,1
@@ -194,6 +194,8 @@
          where:
          - variable: QualityMarker/specificHumidity
            is_not_in: 3
+         - variable: ObsErrorData/specificHumidity
+           value: is_valid
          action:
            name: reject
        # Gross Error Check
@@ -205,6 +207,8 @@
          where:
          - variable: QualityMarker/specificHumidity
            is_in: 3
+         - variable: ObsErrorData/specificHumidity
+           value: is_valid
          action:
            name: reject
        # Re-assign err ObsErrorData <--- TempObsErrorData after gross error check.
