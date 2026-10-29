@@ -183,19 +183,18 @@
                geovar_sfc_geomz: height_above_mean_sea_level_at_surface
                geovar_geomz: geopotential_height
                station_altitude: height
-       - filter: Variable Assignment
-         assignments:
-         - name: DerivedMetaData/Innovation
-           type: float
-           function:
-             name: ObsFunction/Arithmetic
-             options:
-               variables:
-               - name: ObsValue/stationPressure
-               - name: HofX/stationPressure
-               coefs:
-               - 1
-               - -1
+       - filter: Bounds Check
+         filter variables:
+         - name: stationPressure
+         test variables:
+         - name: ObsErrorData/stationPressure
+         minvalue: 0.0
+         maxvalue: 1000
+       - filter: Bounds Check
+         filter variables:
+         - name: stationPressure
+         minvalue: 20000.0
+         maxvalue: 120000.0
        - filter: Variable Assignment
          assignments:
          - name: DerivedMetaData/ObsErrorBoundSfcPressure1

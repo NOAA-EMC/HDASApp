@@ -187,6 +187,23 @@
              options:
                variable: windNorthward
                inflation factor: 4.0
+       # Bounds Check (ObsError)
+       - filter: Bounds Check
+         filter variables:
+         - name: windEastward
+         - name: windNorthward
+         test variables:
+         - name: ObsErrorData/windEastward
+         minvalue: 0.0
+         maxvalue: 1000.
+       # Bounds check (ObsValue)
+       - filter: Bounds Check
+         apply at iterations: 0,1
+         filter variables:
+         - name: windEastward
+         - name: windNorthward
+         minvalue: -200.
+         maxvalue: 200.
        ## Gross Error Check
        - filter: Background Check
          apply at iterations: 0,1

@@ -79,10 +79,10 @@
        - filter: Domain Check
          apply at iterations: 0,1
          where:
-           - variable:
-               name: MetaData/timeOffset # units: s
-             minvalue: -10800
-             maxvalue:  10800
+         - variable:
+             name: MetaData/timeOffset # units: s
+           minvalue: -10800
+           maxvalue:  10800
          action:
            name: reduce obs space
        # Observation Prior Filters (QC)
@@ -184,12 +184,7 @@
              options:
                inflate variables: [specificHumidity]
                pressure: MetaData/pressure
-       - filter: Bounds Check
-         apply at iterations: 0,1
-         filter variables:
-         - name: specificHumidity
-         minvalue: 0.0
-         maxvalue: 1.0
+
        # Observation Post Filters (QC)
        # -------------------------------
        obs post filters:
@@ -203,6 +198,21 @@
              options:
                use_air_pressure: yes
                variable: specificHumidity
+       # Bounds Check (ObsError)
+       - filter: Bounds Check
+         filter variables:
+         - name: airTemperature
+         test variables:
+         - name: ObsErrorData/specificHumidity
+         minvalue: 0.0
+         maxvalue: 1000.
+       # Bounds Check (ObsValue)
+       - filter: Bounds Check
+         apply at iterations: 0,1
+         filter variables:
+         - name: specificHumidity
+         minvalue: 0.0
+         maxvalue: 1.0
        # Create temporary ObsErrorData
        - filter: Variable Assignment
          apply at iterations: 0,1

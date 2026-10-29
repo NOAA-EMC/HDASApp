@@ -147,6 +147,21 @@
                variable: specificHumidity
                inflation factor: 8.0
                request_saturation_specific_humidity_geovals: true
+       # Bounds Check (ObsError)
+       - filter: Bounds Check
+         filter variables:
+         - name: airTemperature
+         test variables:
+         - name: ObsErrorData/specificHumidity
+         minvalue: 0.0
+         maxvalue: 1000.
+       # Bounds Check (ObsValue)
+       - filter: Bounds Check
+         apply at iterations: 0,1
+         filter variables:
+         - name: specificHumidity
+         minvalue: 0.0
+         maxvalue: 1.0
        # Create temporary ObsErrorData
        - filter: Variable Assignment
          apply at iterations: 0,1

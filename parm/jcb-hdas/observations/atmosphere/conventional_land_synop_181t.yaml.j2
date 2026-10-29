@@ -187,14 +187,6 @@
          action:
            name: inflate error
            inflation factor: 1.2
-       # Bounds Check (ObsValue)
-       - filter: Bounds Check
-         filter variables:
-         - name: airTemperature
-         minvalue: 100
-         maxvalue: 400
-         action:
-           name: reject
        # Observation Post Filters (QC)
        # -------------------------------
        obs post filters:
@@ -208,6 +200,21 @@
              options:
                use_air_pressure: yes
                variable: airTemperature
+       # Bounds Check (ObsError)
+       - filter: Bounds Check
+         apply at iterations: 0,1
+         filter variables:
+         - name: airTemperature
+         test variables:
+         - name: ObsErrorData/airTemperature
+         minvalue: 0.0
+         maxvalue: 1000
+       # Bounds Check (ObsValue)
+       - filter: Bounds Check
+         filter variables:
+         - name: airTemperature
+         minvalue: 100
+         maxvalue: 400
        # Create temporary ObsErrorData
        - filter: Variable Assignment
          apply at iterations: 0,1
