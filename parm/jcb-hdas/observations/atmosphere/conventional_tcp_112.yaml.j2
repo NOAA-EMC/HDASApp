@@ -61,35 +61,44 @@
        # Observation Post Filters (QC)
        # -------------------------------
        obs post filters:
-       - filter: Variable Assignment
-         assignments:
-         - name: DerivedMetaData/Innovation
-           type: float
-           function:
-             name: ObsFunction/Arithmetic
+       # Compute and apply inflation factor from model-observation terrain mismatch
+       - filter: Perform Action
+         filter variables:
+         - name: stationPressure
+         action:
+           name: inflate error
+           inflation variable:
+             name: ObsFunction/ObsErrorFactorSfcPressure
              options:
-               variables:
-               - name: ObsValue/stationPressure
-               - name: HofX/stationPressure
-               coefs:
-               - 1
-               - -1
-       - filter: Variable Assignment
-         assignments:
-         - name: DerivedMetaData/ObsErrorBoundSfcPressure1
-           type: float
-           function:
-             name: ObsFunction/ObsErrorBoundConventional
-             options:
-               obsvar: stationPressure
-               obserr_bound_min: 100
-               obserr_bound_max: 300
-               obserr_bound_factor: 75.0
+               geovar_sfc_geomz: height_above_mean_sea_level_at_surface
+               geovar_geomz: geopotential_height
+               station_altitude: height
+       - filter: Bounds check
+         filter variables:
+         - name: stationPressure
+         test variables:
+         - name: ObsErrorData/stationPressure
+         minvalue: 0.0
+         maxvalue: 10000
+       - filter: Bounds check
+         filter variables:
+         - name: stationPressure
+         minvalue: 20000.0
+         maxvalue: 120000.0
+       # Compute and apply background-check
        - filter: Background Check
          filter variables:
          - name: stationPressure
+         where:
+         - variable: QualityMarker/stationPressure
+           is_not_in: 3
          function absolute threshold:
-         - name: DerivedMetaData/ObsErrorBoundSfcPressure1
+         - name: ObsFunction/ObsErrorBoundConventional
+           options:
+             obsvar: stationPressure
+             obserr_bound_min: 100
+             obserr_bound_max: 500
+             obserr_bound_factor: 75.0
          action:
            name: reject
        obs localizations:

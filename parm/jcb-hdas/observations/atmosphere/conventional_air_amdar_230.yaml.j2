@@ -79,8 +79,6 @@
            value: is_not_valid
          where operator: or
          action:
-           name: reject
-         action:
            name: reduce obs space
        # Bounds check (ObsValue)
        - filter: Bounds Check
@@ -91,10 +89,8 @@
          minvalue: -200.
          maxvalue: 200.
          action:
-           name: reject
-         action:
            name: reduce obs space
-       obs post filters:
+       obs prior filters:
        # Regional Domain Check
        - filter: Bounds Check
          filter variables:
@@ -107,10 +103,10 @@
        - filter: Domain Check
          apply at iterations: 0,1
          where:
-           - variable:
-               name: MetaData/timeOffset
-             minvalue: -10800.0
-             maxvalue: 10800.0
+         - variable:
+             name: MetaData/timeOffset
+           minvalue: -10800.0
+           maxvalue: 10800.0
        # ----------------------------------
        # windEastward
        # ----------------------------------
@@ -131,7 +127,9 @@
                  name: MetaData/pressure
                xvals: [110000, 105000, 100000, 95000, 90000, 85000, 80000, 75000, 70000, 65000, 60000, 55000, 50000, 45000, 40000, 35000, 30000, 25000, 20000, 15000, 10000, 7500, 5000, 4000, 3000, 2000, 1000, 500, 400, 300, 200, 100, 0]
                errors: [3.2962, 3.2952, 3.2949, 3.2950, 3.2951, 3.2951, 3.2951, 3.2952, 3.2952, 3.2951, 3.2947, 3.2953, 3.3049, 3.3480, 3.4735, 3.7315, 4.0816, 4.3005, 4.2018, 3.8694, 3.5619, 3.3869, 3.3170, 3.2976, 3.2947, 3.2950, 3.2952, 3.2952, 3.2951, 3.2950, 3.2949, 3.2952, 3.2962]
-       # Error inflation based on pressure check (setup2.f90)
+       #--------------------------------------------------------------
+       obs post filters:
+       # Error inflation based on pressure check (setupw.f90)
        # WindEastward
        - filter: Perform Action
          filter variables:
@@ -211,6 +209,23 @@
          where:
          - variable: MetaData/pressure
            maxvalue: 5000.0
+       # Bounds Check (ObsError)
+       - filter: Bounds Check
+         filter variables:
+         - name: windEastward
+         - name: windNorthward
+         test variables:
+         - name: ObsErrorData/windEastward
+         minvalue: 0.0
+         maxvalue: 1000.
+       # Bounds check (ObsValue)
+       - filter: Bounds Check
+         apply at iterations: 0,1
+         filter variables:
+         - name: windEastward
+         - name: windNorthward
+         minvalue: -200.
+         maxvalue: 200.
        # Gross Error Check (windEastward)
        - filter: Background Check
          apply at iterations: 0,1
@@ -229,7 +244,6 @@
            is_not_in: 3
          action:
            name: reject
-         defer to post: true
        # Gross Error Check (windNorthward)
        - filter: Background Check
          apply at iterations: 0,1
@@ -248,7 +262,6 @@
            is_not_in: 3
          action:
            name: reject
-         defer to post: true
        # Gross Error Check (windEastward): cgross*0.7 if QualityMarker=3
        - filter: Background Check
          apply at iterations: 0,1
@@ -267,7 +280,6 @@
            is_in: 3
          action:
            name: reject
-         defer to post: true
        # Gross Error Check (windNorthward): cgross*0.7 if QualityMarker=3
        - filter: Background Check
          apply at iterations: 0,1
@@ -286,7 +298,6 @@
            is_in: 3
          action:
            name: reject
-         defer to post: true
        obs localizations:
        - localization method: Horizontal Gaspari-Cohn
          lengthscale: 450e3

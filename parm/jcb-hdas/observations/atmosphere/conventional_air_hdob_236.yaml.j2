@@ -70,13 +70,23 @@
        - filter: Domain Check
          apply at iterations: 0,1
          where:
-           - variable:
-               name: MetaData/timeOffset # units: s
-             minvalue: -10800
-             maxvalue:  10800
+         - variable:
+             name: MetaData/timeOffset # units: s
+           minvalue: -10800
+           maxvalue:  10800
          action:
            name: reduce obs space
        obs prior filters:  
+       # Regional Domain Check
+       - filter: Bounds Check
+         filter variables:
+         - name: windEastward
+         - name: windNorthward
+         test variables:
+         - name: GeoVaLs/observable_domain_mask
+           flag all filter variables if any test variable is out of bounds: true
+           minvalue: 0.0
+           maxvalue: 0.5
        # Initial errror assignment
        - filter: Perform Action
          filter variables:
@@ -113,16 +123,6 @@
        # Observation Post Filters (QC)
        # -------------------------------         
        obs post filters:
-       # Regional Domain Check
-       - filter: Bounds Check
-         filter variables:
-         - name: windEastward
-         - name: windNorthward 
-         test variables:
-         - name: GeoVaLs/observable_domain_mask
-           flag all filter variables if any test variable is out of bounds: true
-           minvalue: 0.0
-           maxvalue: 0.5
        ## dynamic observation error (DOE)
        # step1: save OmB
        - filter: Variable Assignment
@@ -186,6 +186,23 @@
              options:
                variable: windNorthward
                inflation factor: 4.0
+       # Bounds Check (ObsError)
+       - filter: Bounds Check
+         filter variables:
+         - name: windEastward
+         - name: windNorthward
+         test variables:
+         - name: ObsErrorData/windEastward
+         minvalue: 0.0
+         maxvalue: 1000.
+       # Bounds check (ObsValue)
+       - filter: Bounds Check
+         apply at iterations: 0,1
+         filter variables:
+         - name: windEastward
+         - name: windNorthward
+         minvalue: -200.
+         maxvalue: 200.
        ## Gross Error Check
        - filter: Background Check
          apply at iterations: 0,1

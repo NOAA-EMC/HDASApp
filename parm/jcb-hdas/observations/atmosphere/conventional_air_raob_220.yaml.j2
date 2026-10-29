@@ -210,25 +210,6 @@
          where:
          - variable: MetaData/pressure
            maxvalue: 5000.0
-       # Bounds Check (ObsError)
-       - filter: Bounds Check
-         filter variables:
-         - name: windEastward
-         - name: windNorthward
-         test variables:
-         - name: ObsErrorData/windEastward
-         minvalue: 0.0
-         action:
-           name: reject
-       # Bounds Check (ObsValue)
-       - filter: Bounds Check
-         filter variables:
-         - name: windEastward
-         - name: windNorthward
-         minvalue: -130
-         maxvalue: 130
-         action:
-           name: reject
        # Error inflation based on pressure check (setupw.f90)
        # WindEastward
        - filter: Perform Action
@@ -317,8 +298,15 @@
          - name: windNorthward
          minvalue: -200.
          maxvalue: 200.
-         action:
-           name: reject
+       # Bounds Check (ObsError)
+       - filter: Bounds Check
+         filter variables:
+         - name: windEastward
+         - name: windNorthward
+         test variables:
+         - name: ObsErrorData/windEastward
+         minvalue: 0.0
+         maxvalue: 1000.
        # Gross Error Check (windEastward)
        - filter: Background Check
          apply at iterations: 0,1

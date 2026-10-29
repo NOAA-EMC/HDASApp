@@ -78,7 +78,7 @@
          minvalue: 0.0
          maxvalue: 1000
          action:
-              name: reduce obs space
+            name: reduce obs space
        # Bounds Check (ObsValue)
        - filter: Bounds Check
          filter variables:
@@ -217,17 +217,20 @@
            name: inflate error
            inflation variable:
              name: ObsErrorFactorSfcPressure/stationPressure
-       - filter: Variable Assignment
-         assignments:
-         - name: DerivedMetaData/Innovation
-           type: float
-           function:
-             name: ObsFunction/Arithmetic
-             options:
-               variables:
-               - name: ObsValue/stationPressure
-               - name: HofX/stationPressure
-               coefs: [1, -1]
+       # Bounds Check (ObsValue)
+       - filter: Bounds Check
+         filter variables:
+         - name: stationPressure
+         test variables:
+         - name: ObsErrorData/stationPressure
+         minvalue: 0.0
+         maxvalue: 1000
+       # Bounds Check (ObsValue)
+       - filter: Bounds Check
+         filter variables:
+         - name: stationPressure
+         minvalue: 20000.0
+         maxvalue: 120000.0
        - filter: Variable Assignment
          assignments:
          - name: DerivedMetaData/ObsErrorBoundSfcPressure1

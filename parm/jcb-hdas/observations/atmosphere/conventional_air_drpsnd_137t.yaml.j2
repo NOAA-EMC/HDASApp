@@ -163,6 +163,22 @@
              options:
                variable: airTemperature
                inflation factor: 8.0
+       # Bounds Check (ObsError)
+       - filter: Bounds Check
+         apply at iterations: 0,1
+         filter variables:
+         - name: airTemperature
+         test variables:
+         - name: ObsErrorData/airTemperature
+         minvalue: 0.0
+         maxvalue: 1000
+       # Bounds Check (ObsValue)
+       - filter: Bounds Check
+         apply at iterations: 0,1
+         filter variables:
+         - name: airTemperature
+         minvalue: 100
+         maxvalue: 400
        # Create temporary ObsErrorData
        - filter: Variable Assignment
          apply at iterations: 0,1
