@@ -24,8 +24,9 @@
          name: CRTM
          Absorbers: [H2O,O3,CO2]
          Clouds: &radiance_atms_n21_clouds [Water, Ice, Rain, Snow, Graupel]
-         method for cloud fraction within fov: thompson
-         method for hydrometeor effective radii within fov: thompson
+         Cloud_Fraction: 1.0
+         method for cloud fraction within fov: {{mp_scheme}}
+         method for hydrometeor effective radii within fov: {{mp_scheme}}
          Cloud_Seeding: true
          obs options:
            Sensor_ID: atms_n21

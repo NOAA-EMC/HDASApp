@@ -49,6 +49,7 @@ active_variables: [eastward_wind,northward_wind,upward_air_velocity,air_temperat
 number_of_outer_loops: 2
 distribution: _DISTRIBUTION_
 distribution_type: _DISTRIBUTION_
+mp_scheme: thompson
 
 # Testing
 # -------
