@@ -61,14 +61,14 @@
        # Observation Post Filters (QC)
        # -------------------------------
        obs post filters:
-       - filter: Bounds check
+       - filter: Bounds Check
          filter variables:
          - name: stationPressure
          test variables:
          - name: ObsErrorData/stationPressure
          minvalue: 0.0
          maxvalue: 10000
-       - filter: Bounds check
+       - filter: Bounds Check
          filter variables:
          - name: stationPressure
          minvalue: 20000.0
