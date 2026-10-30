@@ -61,18 +61,6 @@
        # Observation Post Filters (QC)
        # -------------------------------
        obs post filters:
-       # Compute and apply inflation factor from model-observation terrain mismatch
-       - filter: Perform Action
-         filter variables:
-         - name: stationPressure
-         action:
-           name: inflate error
-           inflation variable:
-             name: ObsFunction/ObsErrorFactorSfcPressure
-             options:
-               geovar_sfc_geomz: height_above_mean_sea_level_at_surface
-               geovar_geomz: geopotential_height
-               station_altitude: height
        - filter: Bounds check
          filter variables:
          - name: stationPressure
