@@ -1,0 +1,191 @@
+     - obs space:
+         name: saldrn_stationPressure_302
+         distribution:
+           name: "{{distribution_type}}"
+           halo size: 500e3
+         obsdatain:
+           engine:
+             type: H5File
+             obsfile: obs/hafs.t{{HH}}z.conventional_air_saldrn_302ps.nc
+             missing file action: warn
+         obsdataout:
+           engine:
+             type: H5File
+             obsfile: hofx/diag_conventional_air_saldrn_302ps_t{{HH}}z.nc
+             allow overwrite: true
+         io pool:
+           max pool size: {{POOL_SIZE}}
+         observed variables: [stationPressure]
+         simulated variables: [stationPressure]
+       get values:
+         time interpolation: linear
+       obs operator:
+         name: SfcCorrected
+         variables:
+         - name: stationPressure
+         correction scheme to use: GSL
+         geovar_sfc_geomz: geopotential_height_at_surface
+         geovar_geomz: geopotential_height
+       linear obs operator:
+         name: Identity
+         variables:
+         - name: stationPressure
+       obs error:
+         covariance model: diagonal
+       obs pre filters:
+       - filter: Domain Check
+         apply at iterations: 0, 1
+         where:
+         - variable:
+             name: MetaData/latitude
+           minvalue: {{MIN_LAT}}
+           maxvalue: {{MAX_LAT}}
+         action:
+           name: reduce obs space
+       - filter: Domain Check
+         apply at iterations: 0, 1
+         where:
+         - variable:
+             name: MetaData/longitude
+           minvalue: {{MIN_LON}}
+           maxvalue: {{MAX_LON}}
+         action:
+           name: reduce obs space
+       # Reject all obs with QualityMarker > 3
+       - filter: RejectList
+         apply at iterations: 0,1
+         filter variables:
+         - name: stationPressure
+         where:
+         - variable: ObsType/stationPressure
+           is_not_in: 302
+         - variable: QualityMarker/stationPressure
+           is_in: 4-15
+           value: is_not_valid
+         - variable: MetaData/pressure
+           value: is_not_valid
+         where operator: or
+         action:
+           name: reduce obs space
+       - filter: Bounds Check
+         filter variables:
+         - name: stationPressure
+         minvalue: 20000.0
+         maxvalue: 120000.0
+         action:
+           name: reduce obs space
+       - filter: Domain Check
+         apply at iterations: 0,1
+         where:
+         - variable:
+             name: MetaData/timeOffset
+           minvalue: -10800
+           maxvalue: 10800
+         action:
+           name: reduce obs space
+       obs prior filters:
+       - filter: Bounds Check
+         filter variables:
+         - name: stationPressure
+         test variables:
+         - name: GeoVaLs/observable_domain_mask
+           flag all filter variables if any test variable is out of bounds: true
+           minvalue: 0.0
+           maxvalue: 0.5
+       - filter: Perform Action
+         filter variables:
+         - name: stationPressure
+         where:
+         - variable: ObsType/stationPressure
+           is_in: 302
+         action:
+           name: assign error
+           error parameter: 130
+       # Observation Post Filters (QC)
+       # ----------------------------------------
+       obs post filters:
+       - filter: Variable Assignment
+         apply at iterations: 0,1
+         where:
+         - variable: ObsType/stationPressure
+           is_in: 302
+         assignments:
+         - name: TempObsErrorData/stationPressure
+           type: float
+           function:
+             name: ObsFunction/Arithmetic
+             options:
+               variables:
+               - name: ObsErrorData/stationPressure
+       - filter: Perform Action
+         apply at iterations: 0,1
+         filter variables:
+         - name: stationPressure
+         action:
+           name: assign error
+           error parameter: 100.0
+         where:
+         - variable:
+             name: ObsErrorData/stationPressure
+           maxvalue: 100.0
+         - variable:
+             name: ObsErrorData/stationPressure
+           value: is_valid
+         - variable: ObsType/stationPressure
+           is_in: 302
+       - filter: Perform Action
+         apply at iterations: 0,1
+         filter variables:
+         - name: stationPressure
+         action:
+           name: assign error
+           error parameter: 300.0
+         where:
+         - variable:
+             name: ObsErrorData/stationPressure
+           minvalue: 300.0
+         - variable:
+             name: ObsErrorData/stationPressure
+           value: is_valid
+         - variable: ObsType/stationPressure
+           is_in: 302
+       - filter: Background Check
+         apply at iterations: 0,1
+         filter variables:
+         - name: stationPressure
+         threshold: 5.0
+         action:
+           name: reject
+         where:
+         - variable: QualityMarker/stationPressure
+           is_not_in: 3
+         - variable: ObsType/stationPressure
+           is_in: 302
+       - filter: Background Check
+         apply at iterations: 0,1
+         filter variables:
+         - name: stationPressure
+         threshold: 3.5
+         action:
+           name: reject
+         where:
+         - variable: QualityMarker/stationPressure
+           is_in: 3
+         - variable: ObsType/stationPressure
+           is_in: 302
+       - filter: Perform Action
+         apply at iterations: 0,1
+         filter variables:
+         - name: stationPressure
+         action:
+           name: assign error
+           error function: TempObsErrorData/stationPressure
+         where:
+         - variable:
+             name: TempObsErrorData/stationPressure
+           value: is_valid
+         - variable: ObsType/stationPressure
+           is_in: 302
+       obs localizations:
+       - localization method: Horizontal Gaspari-Cohn
+         lengthscale: 450e3
