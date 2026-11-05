@@ -17,6 +17,8 @@
          simulated variables: [brightnessTemperature]
          observed variables: [brightnessTemperature]
          channels: &radiance_atms_n20_channels 1-22
+       get values:
+         time interpolation: linear
        obs operator:
          name: CRTM
          Absorbers: [H2O,O3,CO2]

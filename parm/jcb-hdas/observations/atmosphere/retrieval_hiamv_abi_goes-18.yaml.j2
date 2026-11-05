@@ -17,6 +17,8 @@
          simulated variables: [windEastward, windNorthward]
        # Observation Operator
        # --------------------
+       get values:
+         time interpolation: linear
        obs operator:
          name: VertInterp
          hofx scaling field: SurfaceWindScalingPressure

@@ -16,6 +16,8 @@
            max pool size: {{POOL_SIZE}}
          simulated variables: [brightnessTemperature]
          channels: &radiance_amsua_n18_channels 1-15
+       get values:
+         time interpolation: linear
        obs operator:
          name: CRTM
          Absorbers: [H2O, O3, CO2]
