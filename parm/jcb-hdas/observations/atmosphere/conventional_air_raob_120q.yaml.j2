@@ -59,21 +59,45 @@
            maxvalue: {{MAX_LON}}
          action:
            name: reduce obs space
+       # Reject all obs with missing value
+       - filter: Perform Action
+         where:
+         - variable: ObsValue/specificHumidity
+           value: is_not_valid
+         action:
+           name: reduce obs space
+       # Reject all obs not in kx
+       - filter: Perform Action
+         where:
+         - variable: ObsType/specificHumidity
+           is_not_in: 120
+         action:
+           name: reduce obs space
        # Reject all obs with QualityMarker > 3
        - filter: RejectList
          apply at iterations: 0,1
          filter variables:
          - name: specificHumidity
          where:
-         - variable: ObsType/specificHumidity
-           is_not_in: 120
          - variable: QualityMarker/specificHumidity
            is_in: 4-15
-           value: is_not_valid
-         - variable: MetaData/pressure
+         - variable: QualityMarker/specificHumidity
            value: is_not_valid
          where operator: or
          action: 
+           name: reduce obs space
+       # Reject obs with 0 value or missing value pressure
+       - filter: RejectList
+         apply at iterations: 0,1
+         filter variables:
+         - name: specificHumidity
+         where:
+         - variable: MetaData/pressure
+           value: is_not_valid
+         - variable: MetaData/pressure
+           maxvalue: 2.
+         where operator: or
+         action:
            name: reduce obs space
        # Time window filter
        - filter: Domain Check
